@@ -13,6 +13,7 @@ import {
   type Priority,
   type WorkMode,
 } from '../src/generated/prisma/client.js';
+import { canonicalJobUrl } from '../src/job-import/job-url.js';
 
 const DEMO_EMAIL = process.env.DEMO_EMAIL ?? 'demo@applytracker.dev';
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? 'demo-pass-123';
@@ -258,6 +259,7 @@ async function main() {
     const path = PATHS[seed.status];
     const created = daysAgo(seed.daysAgo);
     const step = Math.max(1, Math.floor(seed.daysAgo / path.length));
+    const jobUrl = `https://careers.example.com/${seed.company.toLowerCase().replace(/\s+/g, '-')}/${index + 1}`;
 
     await prisma.application.create({
       data: {
@@ -288,7 +290,8 @@ async function main() {
         salaryMax: seed.salary?.[1],
         currency: seed.salary?.[2] ?? 'USD',
         appliedAt: seed.status === 'WISHLIST' ? null : dateOnly(created),
-        jobUrl: `https://careers.example.com/${seed.company.toLowerCase().replace(/\s+/g, '-')}/${index + 1}`,
+        jobUrl,
+        canonicalJobUrl: canonicalJobUrl(jobUrl),
         createdAt: created,
         tags: { connect: (seed.tags ?? []).map((name) => ({ id: tagId(name) })) },
         statusHistory: {

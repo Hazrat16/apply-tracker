@@ -12,6 +12,7 @@ import type {
   UpdateApplicationData,
 } from '@apply-tracker/shared';
 import { Prisma } from '../generated/prisma/client.js';
+import { canonicalJobUrl } from '../job-import/job-url.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   detailInclude,
@@ -117,6 +118,9 @@ export class ApplicationsService {
       const { companyName, tagIds, archived, appliedAt, status, ...fields } = data;
 
       const update: Prisma.ApplicationUpdateInput = { ...fields };
+      if (fields.jobUrl !== undefined) {
+        update.canonicalJobUrl = fields.jobUrl ? canonicalJobUrl(fields.jobUrl) : null;
+      }
       if (appliedAt !== undefined) update.appliedAt = fromDateOnly(appliedAt);
       if (companyName !== undefined) {
         update.company = { connect: { id: await this.upsertCompany(tx, userId, companyName) } };
@@ -245,6 +249,7 @@ export class ApplicationsService {
     const application = await tx.application.create({
       data: {
         ...fields,
+        canonicalJobUrl: fields.jobUrl ? canonicalJobUrl(fields.jobUrl) : null,
         appliedAt: fromDateOnly(appliedAt),
         position: await this.topOfColumn(tx, userId, fields.status),
         user: { connect: { id: userId } },

@@ -181,26 +181,28 @@ model Company {
 }
 
 model Application {
-  id             String             @id @default(uuid(7)) @db.Uuid
-  userId         String             @map("user_id") @db.Uuid
-  companyId      String             @map("company_id") @db.Uuid
-  roleTitle      String             @map("role_title")
-  status         ApplicationStatus  @default(WISHLIST)
+  id              String             @id @default(uuid(7)) @db.Uuid
+  userId          String             @map("user_id") @db.Uuid
+  companyId       String             @map("company_id") @db.Uuid
+  roleTitle       String             @map("role_title")
+  status          ApplicationStatus  @default(WISHLIST)
   /// Order within the board column (ascending). Fractional so a move only rewrites one row.
-  position       Float              @default(0)
-  jobUrl         String?            @map("job_url")
-  jobDescription String?            @map("job_description")
-  location       String?
-  workMode       WorkMode?          @map("work_mode")
-  source         ApplicationSource?
-  priority       Priority           @default(MEDIUM)
-  salaryMin      Int?               @map("salary_min")
-  salaryMax      Int?               @map("salary_max")
-  currency       String             @default("USD") @db.Char(3)
-  appliedAt      DateTime?          @map("applied_at") @db.Date
-  archivedAt     DateTime?          @map("archived_at")
-  createdAt      DateTime           @default(now()) @map("created_at")
-  updatedAt      DateTime           @updatedAt @map("updated_at")
+  position        Float              @default(0)
+  jobUrl          String?            @map("job_url")
+  /// Normalised job link (tracking parameters removed, job ids canonicalised) for duplicate detection.
+  canonicalJobUrl String?            @map("canonical_job_url")
+  jobDescription  String?            @map("job_description")
+  location        String?
+  workMode        WorkMode?          @map("work_mode")
+  source          ApplicationSource?
+  priority        Priority           @default(MEDIUM)
+  salaryMin       Int?               @map("salary_min")
+  salaryMax       Int?               @map("salary_max")
+  currency        String             @default("USD") @db.Char(3)
+  appliedAt       DateTime?          @map("applied_at") @db.Date
+  archivedAt      DateTime?          @map("archived_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
 
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   company       Company        @relation(fields: [companyId], references: [id], onDelete: NoAction)
@@ -213,6 +215,7 @@ model Application {
   @@index([userId, status, position])
   @@index([userId, updatedAt])
   @@index([companyId])
+  @@index([userId, canonicalJobUrl])
   @@map("applications")
 }
 

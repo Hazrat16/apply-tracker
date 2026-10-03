@@ -9,19 +9,20 @@ A full-stack job application tracker: organise applications on a Kanban board, i
 - **Kanban board** — drag applications between stages (mouse, touch or keyboard), with optimistic updates
 - **List view** — search, filter by status / work mode / priority / tag, sort, paginate; every view is a shareable URL
 - **Application pages** — activity timeline, notes, interviews with outcomes, recruiter contacts, job description
+- **Import from a link** — paste a LinkedIn, Indeed, Greenhouse or company job link (or share it from your phone) and the details are filled in for you to review; pages that need sign-in can be pasted as text (optional AI)
 - **Tags, priority and archiving**
 - **CSV import / export**
 - **Accounts** — email + password or Google, email verification, password reset, profile and account deletion
 
 ## Tech stack
 
-| Area     | Tools                                                                                    |
-| -------- | ---------------------------------------------------------------------------------------- |
-| Frontend | Next.js 16 (App Router, React 19), TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query |
-| Backend  | NestJS 12, Prisma 7, PostgreSQL 17, Redis 8, Pino, Swagger/OpenAPI                       |
-| Shared   | Zod schemas and types shared by the frontend and backend (`packages/shared`)             |
-| Testing  | Vitest, Testing Library, Supertest (e2e against a real database)                         |
-| Tooling  | pnpm workspaces, Turborepo, Docker Compose, GitHub Actions, Husky, Commitlint            |
+| Area     | Tools                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------- |
+| Frontend | Next.js 16 (App Router, React 19), TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query  |
+| Backend  | NestJS 12, Prisma 7, PostgreSQL 17, Redis 8, Pino, Swagger/OpenAPI, Claude API (optional) |
+| Shared   | Zod schemas and types shared by the frontend and backend (`packages/shared`)              |
+| Testing  | Vitest, Testing Library, Supertest (e2e against a real database)                          |
+| Tooling  | pnpm workspaces, Turborepo, Docker Compose, GitHub Actions, Husky, Commitlint             |
 
 ## Architecture
 
@@ -61,6 +62,17 @@ API conventions:
 | Account enumeration | Login and forgot-password responses don't reveal whether an email is registered                          |
 
 **Google sign-in (optional):** create an OAuth client in the [Google Cloud console](https://console.cloud.google.com/apis/credentials), add `http://localhost:3000/api/v1/auth/google/callback` as an authorised redirect URI, and set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `apps/api/.env`. The button appears automatically.
+
+## Job import from links
+
+`POST /api/v1/job-imports/preview-link` turns a job link into a draft the user reviews before saving:
+
+1. **Normalise** the link (tracking parameters removed, LinkedIn/Indeed job ids canonicalised) and check for an already-saved duplicate.
+2. **Fetch safely** — only public IP addresses (validated at DNS resolution, so DNS rebinding can't reach internal services), every redirect re-checked, ports 80/443, 10 s and 3 MB limits, HTML only.
+3. **Extract**, most reliable first: schema.org `JobPosting` JSON-LD → site parsers (LinkedIn, Indeed, Greenhouse) → meta tags → optionally Claude (structured output) to fill gaps.
+4. When a site requires sign-in or blocks automated reads (common for LinkedIn, Indeed, Facebook groups), the user can paste the job text instead (`preview-text`, needs `ANTHROPIC_API_KEY`).
+
+Installed as an app on a phone, ApplyTracker registers a **share target**, so "Share → ApplyTracker" from the LinkedIn or Facebook app opens the import directly.
 
 ## Getting started
 

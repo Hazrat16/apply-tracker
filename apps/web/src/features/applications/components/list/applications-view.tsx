@@ -1,8 +1,9 @@
 'use client';
 
-import { Download, Plus } from 'lucide-react';
+import { Download, Link2, Plus } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ImportJobDialog } from '@/features/job-import/import-job-dialog';
 import { cn } from '@/lib/utils';
 import { applicationsApi } from '../../api';
 import { useApplicationList } from '../../hooks';
@@ -36,6 +37,14 @@ export function ApplicationsView() {
             <Download aria-hidden />
             Export CSV
           </a>
+          <ImportJobDialog
+            trigger={
+              <Button variant="outline" size="sm">
+                <Link2 aria-hidden />
+                Import from link
+              </Button>
+            }
+          />
           <CreateApplicationDialog
             openAfterCreate
             trigger={

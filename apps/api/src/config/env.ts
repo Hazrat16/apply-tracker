@@ -43,6 +43,10 @@ const envSchema = z.object({
 
   RATE_LIMIT_ENABLED: z.stringbool().default(true),
 
+  // Optional: AI extraction for job imports (pasted text, pages without structured data).
+  ANTHROPIC_API_KEY: z.string().optional(),
+  JOB_IMPORT_AI_MODEL: z.string().default('claude-opus-5-5'),
+
   // Google sign-in is enabled only when both are set.
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

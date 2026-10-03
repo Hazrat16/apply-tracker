@@ -35,12 +35,16 @@ export interface TestContext {
   resetDb: () => Promise<void>;
 }
 
-export async function createTestApp(): Promise<TestContext> {
+/** Provider replacements for a test suite, e.g. fakes for external services. */
+export type ProviderOverride = [token: unknown, value: unknown];
+
+export async function createTestApp(overrides: ProviderOverride[] = []): Promise<TestContext> {
   const mail = new FakeMailService();
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+  let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(MailService)
-    .useValue(mail)
-    .compile();
+    .useValue(mail);
+  for (const [token, value] of overrides) builder = builder.overrideProvider(token).useValue(value);
+  const moduleRef = await builder.compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>({ logger: false });
   configureApp(app);

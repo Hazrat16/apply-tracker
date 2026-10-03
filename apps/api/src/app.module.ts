@@ -11,6 +11,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { OriginGuard } from './common/guards/origin.guard.js';
 import { type Env, validateEnv } from './config/env.js';
 import { HealthModule } from './health/health.module.js';
+import { JobImportModule } from './job-import/job-import.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { TagsModule } from './tags/tags.module.js';
@@ -52,6 +53,7 @@ import { UsersModule } from './users/users.module.js';
     UsersModule,
     ApplicationsModule,
     TagsModule,
+    JobImportModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

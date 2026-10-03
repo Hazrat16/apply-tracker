@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Providers } from './providers';
 import './globals.css';
@@ -20,6 +20,16 @@ export const metadata: Metadata = {
   },
   description:
     'Organise your job search on a Kanban board, get follow-up reminders, and see what is working.',
+  applicationName: 'ApplyTracker',
+  appleWebApp: { capable: true, title: 'ApplyTracker', statusBarStyle: 'default' },
+  icons: { apple: '/apple-touch-icon.png' },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

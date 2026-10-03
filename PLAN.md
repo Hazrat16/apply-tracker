@@ -129,11 +129,11 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 **User entry points**
 
-- [ ] "Add from link" input on the board (paste URL → preview → confirm)
-- [ ] **Mobile share:** the web app is installable as a PWA and registers a **Web Share Target**, so tapping _Share → ApplyTracker_ in the LinkedIn/Facebook app sends the link straight in
+- [x] "Import from link" on the board and list (paste URL → preview → edit → save)
+- [x] **Mobile share:** the web app is installable as a PWA and registers a **Web Share Target**, so tapping _Share → ApplyTracker_ in the LinkedIn/Facebook app sends the link straight in
 - [ ] Browser extension button (Phase 6) for pages that need login
 
-**Backend pipeline** (`POST /api/v1/applications/import-link` → BullMQ job → status polled or pushed to the UI)
+**Backend pipeline** (`POST /api/v1/job-imports/preview-link` — synchronous preview, nothing saved until the user confirms)
 
 1. Validate and normalise the URL (strip tracking params, resolve `lnkd.in` / `fb.me` short links), detect duplicates by canonical URL
 2. Fetch the public page server-side (timeout, size limit, SSRF protection: block private IPs)
@@ -145,6 +145,7 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 4. Save as an Application with `sourceUrl`, `source` (LINKEDIN / FACEBOOK / OTHER) and `importStatus`
 5. If the page is blocked or needs login: create the card with just the link and ask the user to **paste the job text**, which then goes through the same AI extraction
 
+**Implemented:** URL normalisation + duplicate detection (`canonical_job_url`), SSRF-safe fetcher (public IPs only — checked at DNS resolution and on every redirect —, ports 80/443, 10 s / 3 MB limits, HTML only), extractors in order: JSON-LD `JobPosting` → site parsers (LinkedIn, Indeed, Greenhouse) → meta tags → optional Claude extraction (structured outputs) to fill gaps; "paste job text" fallback when a site needs sign-in or blocks automated reads.
 **Known limitations**
 
 - LinkedIn and Facebook block or limit automated access, and many posts (especially Facebook group posts) are only visible when logged in. The server never logs in or scrapes with user credentials. For those pages, use the browser extension, which reads the page the user already has open, or paste the text.
@@ -211,4 +212,4 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ## 8. Next Step
 
-Start **Phase 2.5**: import a job from a LinkedIn / Facebook / job-board link — or deploy the MVP first.
+Start **Phase 3**: reminders & automation (BullMQ + Redis) — or deploy the MVP first.
