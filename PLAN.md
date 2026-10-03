@@ -155,10 +155,13 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ### Phase 3 — Reminders & Automation
 
-- [ ] Follow-up reminders (BullMQ delayed jobs) → email + in-app notifications
-- [ ] Auto-suggest follow-up when an application has had no update for N days
-- [ ] Interview calendar view + `.ics` export
-- [ ] Weekly email summary
+- [x] Follow-up reminders (BullMQ delayed jobs + a 5-minute sweep as a safety net) → email + in-app notifications
+- [x] Auto-suggest follow-up when an application has had no update for N days (per-user setting)
+- [x] Interview heads-up 24 h before (in-app + email)
+- [x] Calendar agenda page, `.ics` export and a private, revocable subscription feed
+- [x] Weekly email summary (Monday 08:00 in the user's time zone)
+- [x] Email delivery through a retrying queue; notification bell; notification preferences
+- [x] Separate worker process (`node dist/worker.js`, `RUN_WORKERS=false` on the API)
 
 ### Phase 4 — Analytics Dashboard
 
@@ -212,4 +215,4 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ## 8. Next Step
 
-Start **Phase 3**: reminders & automation (BullMQ + Redis) — or deploy the MVP first.
+Start **Phase 4**: analytics dashboard — or deploy the MVP first.

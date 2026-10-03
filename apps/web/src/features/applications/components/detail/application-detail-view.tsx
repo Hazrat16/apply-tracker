@@ -11,6 +11,7 @@ import { ApplicationHeader } from './application-header';
 import { ContactsSection } from './contacts-section';
 import { DetailsCard } from './details-card';
 import { InterviewsSection } from './interviews-section';
+import { RemindersSection } from './reminders-section';
 
 export function ApplicationDetailView({ id }: { id: string }) {
   const { data: app, isPending, error } = useApplication(id);
@@ -53,6 +54,7 @@ export function ApplicationDetailView({ id }: { id: string }) {
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="interviews">Interviews ({app.interviews.length})</TabsTrigger>
             <TabsTrigger value="contacts">Contacts ({app.contacts.length})</TabsTrigger>
+            <TabsTrigger value="reminders">Reminders</TabsTrigger>
           </TabsList>
           <TabsContent value="activity" className="pt-4">
             <ActivityTimeline application={app} />
@@ -62,6 +64,9 @@ export function ApplicationDetailView({ id }: { id: string }) {
           </TabsContent>
           <TabsContent value="contacts" className="pt-4">
             <ContactsSection application={app} />
+          </TabsContent>
+          <TabsContent value="reminders" className="pt-4">
+            <RemindersSection application={app} />
           </TabsContent>
         </Tabs>
 

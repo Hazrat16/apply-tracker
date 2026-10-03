@@ -30,6 +30,19 @@ export const registerSchema = z.object({
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
+  /** The browser's IANA time zone, so reminders and summaries use local time from day one. */
+  timeZone: z
+    .string()
+    .max(64)
+    .refine((zone) => {
+      try {
+        new Intl.DateTimeFormat('en', { timeZone: zone });
+        return true;
+      } catch {
+        return false;
+      }
+    }, 'Unknown time zone')
+    .optional(),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

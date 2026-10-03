@@ -19,8 +19,16 @@ model User {
   /// Null for accounts that only sign in with an OAuth provider.
   passwordHash    String?   @map("password_hash")
   emailVerifiedAt DateTime? @map("email_verified_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Notification preferences
+  emailReminders    Boolean  @default(true) @map("email_reminders")
+  weeklySummary     Boolean  @default(true) @map("weekly_summary")
+  followUpAfterDays Int      @default(7) @map("follow_up_after_days")
+  timeZone          String   @default("UTC") @map("time_zone")
+  /// Secret token in the private calendar subscription URL.
+  calendarToken     String?  @unique @map("calendar_token")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   accounts           Account[]
   sessions           Session[]
@@ -28,6 +36,8 @@ model User {
   companies          Company[]
   applications       Application[]
   tags               Tag[]
+  reminders          Reminder[]
+  notifications      Notification[]
 
   @@map("users")
 }
@@ -211,6 +221,8 @@ model Application {
   contacts      Contact[]
   interviews    Interview[]
   statusHistory StatusChange[]
+  reminders     Reminder[]
+  notifications Notification[]
 
   @@index([userId, status, position])
   @@index([userId, updatedAt])
@@ -294,4 +306,58 @@ model StatusChange {
 
   @@index([applicationId, changedAt])
   @@map("status_changes")
+}
+
+// ── Reminders & notifications ───────────────────────────────────────────────
+
+model Reminder {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  /// Optional: reminders can also be general ("Update my CV").
+  applicationId String?   @map("application_id") @db.Uuid
+  title         String
+  note          String?
+  dueAt         DateTime  @map("due_at")
+  completedAt   DateTime? @map("completed_at")
+  /// Set when the due notification was sent; guarantees it is sent once.
+  notifiedAt    DateTime? @map("notified_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dueAt])
+  @@index([applicationId])
+  @@index([dueAt])
+  @@map("reminders")
+}
+
+enum NotificationType {
+  REMINDER_DUE
+  FOLLOW_UP_SUGGESTED
+  INTERVIEW_UPCOMING
+  WEEKLY_SUMMARY
+}
+
+model Notification {
+  id            String           @id @default(uuid(7)) @db.Uuid
+  userId        String           @map("user_id") @db.Uuid
+  applicationId String?          @map("application_id") @db.Uuid
+  type          NotificationType
+  title         String
+  body          String?
+  /// In-app path to open when the notification is clicked.
+  link          String?
+  readAt        DateTime?        @map("read_at")
+  /// Identifies the event that caused it, so retries and repeated scans never notify twice.
+  dedupeKey     String?          @map("dedupe_key")
+  createdAt     DateTime         @default(now()) @map("created_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

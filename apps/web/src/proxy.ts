@@ -3,7 +3,14 @@ import { type NextRequest, NextResponse } from 'next/server';
 /** Set by the API alongside the httpOnly auth cookies; signals that a session probably exists. */
 const SESSION_HINT_COOKIE = 'logged_in';
 
-const PROTECTED_PREFIXES = ['/dashboard', '/board', '/applications', '/settings', '/share'];
+const PROTECTED_PREFIXES = [
+  '/dashboard',
+  '/board',
+  '/applications',
+  '/calendar',
+  '/settings',
+  '/share',
+];
 const GUEST_ONLY = ['/login', '/register'];
 
 /**
@@ -35,6 +42,7 @@ export const config = {
     '/dashboard/:path*',
     '/board/:path*',
     '/applications/:path*',
+    '/calendar/:path*',
     '/settings/:path*',
     '/share/:path*',
     '/login',

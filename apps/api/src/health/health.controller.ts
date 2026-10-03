@@ -3,6 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { HealthCheck, HealthCheckService, PrismaHealthIndicator } from '@nestjs/terminus';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { RedisHealthIndicator } from './redis.health.js';
 
 @ApiTags('health')
 @Public()
@@ -12,12 +13,16 @@ export class HealthController {
     private readonly health: HealthCheckService,
     private readonly prismaHealth: PrismaHealthIndicator,
     private readonly prisma: PrismaService,
+    private readonly redisHealth: RedisHealthIndicator,
   ) {}
 
   @Get()
   @HealthCheck()
   @ApiOperation({ summary: 'Liveness and dependency status' })
   check() {
-    return this.health.check([() => this.prismaHealth.pingCheck('database', this.prisma)]);
+    return this.health.check([
+      () => this.prismaHealth.pingCheck('database', this.prisma),
+      () => this.redisHealth.pingCheck('redis'),
+    ]);
   }
 }

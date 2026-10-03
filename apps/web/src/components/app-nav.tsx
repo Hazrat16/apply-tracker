@@ -1,6 +1,6 @@
 'use client';
 
-import { KanbanSquare, List } from 'lucide-react';
+import { CalendarDays, KanbanSquare, List } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 const LINKS = [
   { href: '/board', label: 'Board', icon: KanbanSquare },
   { href: '/applications', label: 'Applications', icon: List },
+  { href: '/calendar', label: 'Calendar', icon: CalendarDays },
 ];
 
 export function AppNav() {

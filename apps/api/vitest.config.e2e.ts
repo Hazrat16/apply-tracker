@@ -15,6 +15,10 @@ export default defineConfig({
       NODE_ENV: 'test',
       LOG_LEVEL: 'silent',
       RATE_LIMIT_ENABLED: 'false',
+      // Queues use their own Redis database; jobs are inspected, not processed, in tests.
+      REDIS_URL: process.env.TEST_REDIS_URL ?? 'redis://localhost:6380/1',
+      QUEUE_PREFIX: 'apply-tracker-test',
+      RUN_WORKERS: 'false',
       JWT_ACCESS_SECRET: 'test-secret-that-is-at-least-32-characters-long',
       WEB_URL: 'http://localhost:3000',
       CORS_ORIGINS: 'http://localhost:3000',

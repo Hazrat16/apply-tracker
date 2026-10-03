@@ -249,19 +249,26 @@ async function main() {
       name: 'Demo User',
       passwordHash: await hash(DEMO_PASSWORD),
       emailVerifiedAt: new Date(),
+      // A shorter follow-up window so the demo shows suggestions straight away.
+      followUpAfterDays: 5,
       tags: { create: TAGS },
     },
     include: { tags: true },
   });
   const tagId = (name: string) => user.tags.find((tag) => tag.name === name)!.id;
 
+  const ids = new Map<string, string>();
   for (const [index, seed] of APPLICATIONS.entries()) {
     const path = PATHS[seed.status];
     const created = daysAgo(seed.daysAgo);
     const step = Math.max(1, Math.floor(seed.daysAgo / path.length));
     const jobUrl = `https://careers.example.com/${seed.company.toLowerCase().replace(/\s+/g, '-')}/${index + 1}`;
 
-    await prisma.application.create({
+    // The last status change is the last activity, so quiet applications look quiet
+    // (and get follow-up suggestions).
+    const lastChange = new Date(created.getTime() + (path.length - 1) * step * DAY);
+
+    const application = await prisma.application.create({
       data: {
         user: { connect: { id: user.id } },
         company: {
@@ -293,6 +300,7 @@ async function main() {
         jobUrl,
         canonicalJobUrl: canonicalJobUrl(jobUrl),
         createdAt: created,
+        updatedAt: lastChange,
         tags: { connect: (seed.tags ?? []).map((name) => ({ id: tagId(name) })) },
         statusHistory: {
           create: path.map((toStatus, i) => ({
@@ -315,7 +323,33 @@ async function main() {
           : undefined,
       },
     });
+    ids.set(seed.company, application.id);
   }
+
+  const tomorrowNine = new Date(Date.now() + DAY);
+  tomorrowNine.setUTCHours(9, 0, 0, 0);
+  await prisma.reminder.createMany({
+    data: [
+      {
+        userId: user.id,
+        applicationId: ids.get('Stark Mobility'),
+        title: 'Reply to the Stark Mobility offer',
+        note: 'Ask about the signing bonus before accepting.',
+        dueAt: new Date(Date.now() - DAY),
+      },
+      {
+        userId: user.id,
+        applicationId: ids.get('Contoso Cloud'),
+        title: 'Prepare questions for the Contoso phone screen',
+        dueAt: tomorrowNine,
+      },
+      {
+        userId: user.id,
+        title: 'Update CV with the payments project',
+        dueAt: new Date(Date.now() + 3 * DAY),
+      },
+    ],
+  });
 
   console.log(
     `Seeded ${APPLICATIONS.length} applications for ${DEMO_EMAIL} (password: ${DEMO_PASSWORD})`,

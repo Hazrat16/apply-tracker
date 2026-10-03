@@ -38,7 +38,8 @@ export function RegisterForm() {
 
   const onSubmit = async ({ name, email, password }: z.output<typeof registerFormSchema>) => {
     try {
-      setMe(await authApi.register({ name, email, password }));
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setMe(await authApi.register({ name, email, password, timeZone }));
       toast.success('Account created', {
         description: `We sent a verification link to ${email}.`,
       });

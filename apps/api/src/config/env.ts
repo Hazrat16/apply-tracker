@@ -25,6 +25,10 @@ const envSchema = z.object({
 
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   REDIS_URL: z.url({ protocol: /^rediss?$/ }).default('redis://localhost:6380'),
+  /** Run background workers (reminders, emails, scheduled jobs) in this process. */
+  RUN_WORKERS: z.stringbool().default(true),
+  /** Redis key prefix for queues, so several environments can share one Redis. */
+  QUEUE_PREFIX: z.string().default('apply-tracker'),
 
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce

@@ -7,5 +7,6 @@ import { ApplicationsService } from './applications.service.js';
 @Module({
   controllers: [ApplicationsController, ApplicationItemsController],
   providers: [ApplicationsService, ApplicationItemsService],
+  exports: [ApplicationsService],
 })
 export class ApplicationsModule {}

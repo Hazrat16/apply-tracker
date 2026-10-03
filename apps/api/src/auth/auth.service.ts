@@ -60,7 +60,7 @@ export class AuthService {
     let user;
     try {
       user = await this.prisma.user.create({
-        data: { email: input.email, name: input.name, passwordHash },
+        data: { email: input.email, name: input.name, passwordHash, timeZone: input.timeZone },
         include: { accounts: { select: { provider: true } } },
       });
     } catch (error) {

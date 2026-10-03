@@ -1,9 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { User as PublicUser } from '@apply-tracker/shared';
+import type {
+  NotificationPreferences,
+  UpdateNotificationPreferencesInput,
+  User as PublicUser,
+} from '@apply-tracker/shared';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 const userWithAccounts = { accounts: { select: { provider: true } } } as const;
+
+const preferenceFields = {
+  emailReminders: true,
+  weeklySummary: true,
+  followUpAfterDays: true,
+  timeZone: true,
+} as const;
 
 export type UserWithAccounts = Prisma.UserGetPayload<{ include: typeof userWithAccounts }>;
 
@@ -28,6 +39,17 @@ export class UsersService {
   async updateProfile(id: string, data: { name: string }): Promise<PublicUser> {
     const user = await this.prisma.user.update({ where: { id }, data, include: userWithAccounts });
     return UsersService.toPublic(user);
+  }
+
+  async getPreferences(id: string): Promise<NotificationPreferences> {
+    return this.prisma.user.findUniqueOrThrow({ where: { id }, select: preferenceFields });
+  }
+
+  async updatePreferences(
+    id: string,
+    data: UpdateNotificationPreferencesInput,
+  ): Promise<NotificationPreferences> {
+    return this.prisma.user.update({ where: { id }, data, select: preferenceFields });
   }
 
   /** Maps a database user to the API representation — never exposes the password hash. */

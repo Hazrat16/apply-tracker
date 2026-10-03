@@ -29,10 +29,20 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     env:
       DATABASE_URL: postgresql://apply:apply@localhost:5432/apply_tracker_test?schema=public
       TEST_DATABASE_URL: postgresql://apply:apply@localhost:5432/apply_tracker_test?schema=public
+      TEST_REDIS_URL: redis://localhost:6379/1
       TURBO_TELEMETRY_DISABLED: 1
 
     steps:

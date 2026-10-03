@@ -4,6 +4,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { AuthGate } from '@/features/auth/components/auth-gate';
 import { UserMenu } from '@/features/auth/components/user-menu';
 import { VerifyEmailBanner } from '@/features/auth/components/verify-email-banner';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 
 export default function AppLayout({ children }: LayoutProps<'/'>) {
   return (
@@ -16,6 +17,7 @@ export default function AppLayout({ children }: LayoutProps<'/'>) {
           </div>
           <div className="flex items-center gap-1">
             <ThemeToggle />
+            <NotificationBell />
             <UserMenu />
           </div>
         </div>

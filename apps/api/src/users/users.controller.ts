@@ -6,6 +6,9 @@ import {
   changePasswordSchema,
   type DeleteAccountInput,
   deleteAccountSchema,
+  type NotificationPreferences,
+  type UpdateNotificationPreferencesInput,
+  updateNotificationPreferencesSchema,
   type UpdateProfileInput,
   updateProfileSchema,
   type User,
@@ -49,6 +52,22 @@ export class UsersController {
     @ZodBody(updateProfileSchema) body: UpdateProfileInput,
   ): Promise<User> {
     return this.users.updateProfile(user.userId, body);
+  }
+
+  @Get('preferences')
+  @ApiOperation({ summary: 'Notification preferences' })
+  preferences(@CurrentUser() user: AuthUser): Promise<NotificationPreferences> {
+    return this.users.getPreferences(user.userId);
+  }
+
+  @Patch('preferences')
+  @ApiOperation({ summary: 'Update notification preferences' })
+  @ApiZodBody(updateNotificationPreferencesSchema)
+  updatePreferences(
+    @CurrentUser() user: AuthUser,
+    @ZodBody(updateNotificationPreferencesSchema) body: UpdateNotificationPreferencesInput,
+  ): Promise<NotificationPreferences> {
+    return this.users.updatePreferences(user.userId, body);
   }
 
   @Post('password')
