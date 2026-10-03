@@ -24,7 +24,7 @@ const DOT: Record<Status, string> = {
 export function ApiStatus() {
   const { data, error, isPending } = useQuery({
     queryKey: ['health'],
-    queryFn: () => apiFetch('/health', healthResponseSchema),
+    queryFn: ({ signal }) => apiFetch('/health', { schema: healthResponseSchema, signal }),
     retry: false,
     refetchInterval: 30_000,
   });

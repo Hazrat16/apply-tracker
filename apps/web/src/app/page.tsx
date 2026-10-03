@@ -7,10 +7,13 @@ import {
   type LucideIcon,
   Sparkles,
 } from 'lucide-react';
+import { Suspense } from 'react';
 import { ApiStatus } from '@/components/api-status';
+import { ButtonLink } from '@/components/button-link';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AccountDeletedNotice } from '@/features/auth/components/account-deleted-notice';
 
 const FEATURES: { icon: LucideIcon; title: string; description: string }[] = [
   {
@@ -49,13 +52,22 @@ const FEATURES: { icon: LucideIcon; title: string; description: string }[] = [
 export default function Home() {
   return (
     <>
+      <Suspense>
+        <AccountDeletedNotice />
+      </Suspense>
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           <span className="flex items-center gap-2 font-semibold">
             <KanbanSquare className="size-5" aria-hidden />
             ApplyTracker
           </span>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <ButtonLink href="/login" variant="ghost">
+              Sign in
+            </ButtonLink>
+            <ButtonLink href="/register">Get started</ButtonLink>
+          </div>
         </div>
       </header>
 
@@ -71,6 +83,14 @@ export default function Home() {
             Stop losing track of where you applied. ApplyTracker organises your job search, reminds
             you to follow up, and shows you what is working.
           </p>
+          <div className="mt-8 flex justify-center gap-3">
+            <ButtonLink href="/register" size="lg">
+              Create a free account
+            </ButtonLink>
+            <ButtonLink href="/login" size="lg" variant="outline">
+              Sign in
+            </ButtonLink>
+          </div>
         </section>
 
         <section aria-label="Features" className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

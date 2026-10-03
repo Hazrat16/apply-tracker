@@ -1,0 +1,23 @@
+'use client';
+
+import { useMe } from '@/features/auth/hooks';
+import { ConnectedAccounts } from '@/features/settings/connected-accounts';
+import { DeleteAccount } from '@/features/settings/delete-account';
+import { PasswordForm } from '@/features/settings/password-form';
+import { ProfileForm } from '@/features/settings/profile-form';
+
+export function SettingsView() {
+  // AuthGate guarantees the user is loaded before this renders.
+  const { data: user } = useMe();
+  if (!user) return null;
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+      <ProfileForm user={user} />
+      <PasswordForm key={String(user.hasPassword)} user={user} />
+      <ConnectedAccounts user={user} />
+      <DeleteAccount user={user} />
+    </div>
+  );
+}

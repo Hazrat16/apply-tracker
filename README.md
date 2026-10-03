@@ -26,12 +26,32 @@ packages/
 docker-compose.yml    Postgres, Redis, Mailpit for local development
 ```
 
+The browser only talks to the web app: Next.js proxies `/api/*` to the NestJS API, so auth cookies are first-party and no cross-origin requests are needed.
+
 API conventions:
 
 - All routes live under `/api`, versioned by URI (`/api/v1/...`). Infrastructure routes such as `/api/health` are version-neutral.
-- Every error uses one JSON shape: `{ statusCode, error, message, path, timestamp, requestId }`.
+- Every route requires authentication unless explicitly marked `@Public()`.
+- Request bodies are validated with the same Zod schemas the web forms use (`packages/shared`), and the Swagger docs are generated from them.
+- Every error uses one JSON shape: `{ statusCode, error, message, issues?, path, timestamp, requestId }`, where `issues` lists field-level validation errors.
 - Each request gets an `x-request-id` (or reuses the incoming one), which appears in logs and error responses.
 - Environment variables are validated with Zod at startup; the app refuses to boot with invalid config.
+
+## Authentication
+
+| Concern             | Approach                                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| Passwords           | argon2id (OWASP parameters); constant-time behaviour for unknown emails                                  |
+| Access token        | 15-minute JWT in an `httpOnly`, `SameSite=Lax` cookie scoped to `/api`                                   |
+| Refresh token       | Opaque random token, stored as a SHA-256 hash, `SameSite=Strict` cookie scoped to `/api/v1/auth`         |
+| Rotation & reuse    | Every refresh issues a new token; replaying a used one revokes the whole session (token theft detection) |
+| Sessions            | One row per signed-in device, 30-day absolute lifetime; password change/reset signs out other devices    |
+| Email flows         | Single-use, hashed, expiring tokens for email verification (24 h) and password reset (1 h)               |
+| Google sign-in      | OAuth 2.0 Authorization Code + PKCE, `state` checked against a cookie; links verified emails             |
+| Abuse protection    | Rate limiting (stricter on login/register/reset), CSRF origin check, Helmet security headers             |
+| Account enumeration | Login and forgot-password responses don't reveal whether an email is registered                          |
+
+**Google sign-in (optional):** create an OAuth client in the [Google Cloud console](https://console.cloud.google.com/apis/credentials), add `http://localhost:3000/api/v1/auth/google/callback` as an authorised redirect URI, and set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `apps/api/.env`. The button appears automatically.
 
 ## Getting started
 

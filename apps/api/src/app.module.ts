@@ -1,12 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
+import { AuthModule } from './auth/auth.module.js';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
+import { OriginGuard } from './common/guards/origin.guard.js';
 import { type Env, validateEnv } from './config/env.js';
 import { HealthModule } from './health/health.module.js';
+import { MailModule } from './mail/mail.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { UsersModule } from './users/users.module.js';
 
 @Module({
   imports: [
@@ -30,9 +36,25 @@ import { PrismaModule } from './prisma/prisma.module.js';
         },
       }),
     }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Env, true>) => ({
+        throttlers: [{ name: 'default', ttl: 60_000, limit: 100 }],
+        skipIf: () => !config.get('RATE_LIMIT_ENABLED', { infer: true }),
+      }),
+    }),
     PrismaModule,
+    MailModule,
     HealthModule,
+    AuthModule,
+    UsersModule,
   ],
-  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
+  providers: [
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    // Guards run in this order: CSRF origin check → rate limit → authentication.
+    { provide: APP_GUARD, useClass: OriginGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
 })
 export class AppModule {}

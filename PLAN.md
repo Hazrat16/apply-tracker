@@ -103,11 +103,12 @@ Statuses: `WISHLIST → APPLIED → OA/ASSESSMENT → INTERVIEW → OFFER → AC
 
 ### Phase 1 — Auth & Users
 
-- [ ] Register / login with email + password (bcrypt, rate-limited)
-- [ ] JWT access token + rotating refresh token in httpOnly cookies
-- [ ] Email verification and password reset
-- [ ] Google OAuth login
-- [ ] Protected routes on web, profile settings page
+- [x] Register / login with email + password (argon2id, rate-limited)
+- [x] JWT access token + rotating refresh token in httpOnly cookies, with refresh-token reuse detection
+- [x] Email verification and password reset (Mailpit in dev)
+- [x] Google OAuth login (Authorization Code + PKCE)
+- [x] Protected routes on web (Next.js proxy + client auth gate), settings page (profile, password, delete account)
+- [x] CSRF origin check, account-enumeration-safe responses, `/api` proxied through Next.js for first-party cookies
 
 ### Phase 2 — Core Tracker (MVP)
 
@@ -174,7 +175,9 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 - [ ] Browser extension (Chrome) to save a job from LinkedIn/Indeed in one click
 - [ ] Accessibility pass (keyboard navigation for the board), responsive mobile layout
-- [ ] Sentry, rate limiting, Helmet, CORS, input sanitisation
+- [ ] Sentry; move rate-limit storage to Redis so limits hold across API instances
+- [ ] Deployment: make sure the hosting edge sets `X-Forwarded-For` and configure `TRUST_PROXY`, otherwise every user shares one IP for rate limiting (the Next.js `/api` rewrite forwards the header but does not add it)
+- [ ] Active sessions list in settings ("sign out other devices")
 - [ ] Seeded **demo account** so recruiters can try it without signing up
 - [ ] E2E tests for critical flows (signup → add application → move on board)
 - [ ] README with screenshots/GIF, architecture diagram, setup guide; short demo video
@@ -206,4 +209,4 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ## 8. Next Step
 
-Start **Phase 1**: authentication (register/login, refresh tokens, email verification, Google OAuth).
+Start **Phase 2**: the core tracker — application CRUD, Kanban board with drag-and-drop, list view with filters.

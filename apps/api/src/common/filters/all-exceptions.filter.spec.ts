@@ -1,4 +1,4 @@
-import { ArgumentsHost, NotFoundException } from '@nestjs/common';
+import { ArgumentsHost, BadRequestException, NotFoundException } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { AllExceptionsFilter } from './all-exceptions.filter.js';
 
@@ -40,6 +40,18 @@ describe('AllExceptionsFilter', () => {
       {},
       expect.objectContaining({ statusCode: 500, message: 'Internal server error' }),
       500,
+    );
+  });
+
+  it('passes through field-level validation issues', () => {
+    const { filter, host, reply } = setup();
+    const issues = [{ path: 'email', message: 'Invalid email' }];
+    filter.catch(new BadRequestException({ message: 'Validation failed', issues }), host);
+
+    expect(reply).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ statusCode: 400, message: 'Validation failed', issues }),
+      400,
     );
   });
 });

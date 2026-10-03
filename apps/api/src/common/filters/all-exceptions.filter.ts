@@ -13,6 +13,8 @@ export interface ErrorResponse {
   statusCode: number;
   error: string;
   message: string | string[];
+  /** Field-level validation errors (see ZodValidationPipe). */
+  issues?: { path: string; message: string }[];
   path: string;
   timestamp: string;
   requestId?: string;
@@ -34,12 +36,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
     let message: string | string[] = 'Internal server error';
+    let issues: ErrorResponse['issues'];
     if (exception instanceof HttpException) {
       const res = exception.getResponse();
-      message =
-        typeof res === 'string'
-          ? res
-          : ((res as { message?: string | string[] }).message ?? exception.message);
+      if (typeof res === 'string') {
+        message = res;
+      } else {
+        const body = res as Pick<ErrorResponse, 'message' | 'issues'>;
+        message = body.message ?? exception.message;
+        issues = body.issues;
+      }
     } else {
       this.logger.error(exception);
     }
@@ -48,6 +54,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode,
       error: HttpStatus[statusCode] ?? 'ERROR',
       message,
+      ...(issues && { issues }),
       path: httpAdapter.getRequestUrl(request) as string,
       timestamp: new Date().toISOString(),
       requestId: request.id,
