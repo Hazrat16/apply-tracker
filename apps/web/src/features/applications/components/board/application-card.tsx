@@ -2,8 +2,7 @@ import type { ApplicationSummary } from '@apply-tracker/shared';
 import { CalendarClock, Flag, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { WORK_MODE_LABELS } from '../../constants';
-import { formatSalary, formatUpcoming, timeAgo } from '../../format';
+import { formatPlace, formatSalary, formatUpcoming, timeAgo } from '../../format';
 import { TagBadge } from '../tag-badge';
 
 interface ApplicationCardProps {
@@ -14,9 +13,7 @@ interface ApplicationCardProps {
 
 export function ApplicationCard({ application: app, overlay }: ApplicationCardProps) {
   const salary = formatSalary(app.salaryMin, app.salaryMax, app.currency);
-  const place = [app.location, app.workMode && WORK_MODE_LABELS[app.workMode]]
-    .filter(Boolean)
-    .join(' · ');
+  const place = formatPlace(app.location, app.workMode);
 
   return (
     <div

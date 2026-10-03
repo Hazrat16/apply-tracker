@@ -1,4 +1,6 @@
+import type { WorkMode } from '@apply-tracker/shared';
 import { format, formatDistanceToNowStrict, isToday, isTomorrow, parseISO } from 'date-fns';
+import { WORK_MODE_LABELS } from './constants';
 
 /** "€70k–85k", "$120,000", or null when no salary is known. */
 export function formatSalary(
@@ -36,3 +38,11 @@ export function formatUpcoming(iso: string): string {
 
 /** ISO string → value for `<input type="datetime-local">` in the user's time zone. */
 export const toDateTimeLocal = (iso: string) => format(new Date(iso), "yyyy-MM-dd'T'HH:mm");
+
+/** "Berlin · Hybrid". Skips the work mode when the location already says it ("Remote"). */
+export function formatPlace(location: string | null, workMode: WorkMode | null): string {
+  const mode = workMode ? WORK_MODE_LABELS[workMode] : null;
+  if (!location) return mode ?? '';
+  if (!mode || location.toLowerCase().includes(mode.toLowerCase())) return location;
+  return `${location} · ${mode}`;
+}

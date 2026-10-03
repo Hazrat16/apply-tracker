@@ -16,8 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { WORK_MODE_LABELS } from '../../constants';
-import { formatDateOnly, formatSalary, timeAgo } from '../../format';
+import { formatDateOnly, formatPlace, formatSalary, timeAgo } from '../../format';
 import { StatusBadge } from '../status-badge';
 import { TagBadge } from '../tag-badge';
 
@@ -99,9 +98,7 @@ export function ApplicationsTable({ items, params, onSort }: ApplicationsTablePr
                 <StatusBadge status={app.status} />
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {[app.location, app.workMode && WORK_MODE_LABELS[app.workMode]]
-                  .filter(Boolean)
-                  .join(' · ') || '—'}
+                {formatPlace(app.location, app.workMode) || '—'}
               </TableCell>
               <TableCell className="whitespace-nowrap text-muted-foreground">
                 {formatSalary(app.salaryMin, app.salaryMax, app.currency) ?? '—'}
