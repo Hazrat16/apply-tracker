@@ -112,12 +112,14 @@ Statuses: `WISHLIST → APPLIED → OA/ASSESSMENT → INTERVIEW → OFFER → AC
 
 ### Phase 2 — Core Tracker (MVP)
 
-- [ ] Application CRUD with company auto-create
-- [ ] **Kanban board** with drag-and-drop (dnd-kit) and optimistic updates
-- [ ] Table/list view with search, filters (status, tag, date, work mode), sorting, pagination
-- [ ] Application detail page: notes, contacts, interviews, timeline (status history)
-- [ ] Tags, priority, archive
-- [ ] CSV import/export
+- [x] Application CRUD with company auto-create (case-insensitive, per user)
+- [x] **Kanban board** with drag-and-drop (dnd-kit): fractional positions, optimistic updates with rollback, keyboard + screen-reader support
+- [x] Table/list view with search, filters (status, work mode, priority, tag, archived), sorting, pagination — all in the URL
+- [x] Application detail page: notes, contacts, interviews, activity timeline (status history)
+- [x] Tags, priority, archive
+- [x] CSV import/export (header aliases, per-row errors, formula-injection safe)
+- [x] Demo data seed (`db:seed`)
+- [ ] Deploy the MVP (needs hosting accounts — see Phase 6)
 
 > ✅ **Milestone: MVP deployed with a live demo link.**
 
@@ -131,7 +133,7 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 - [ ] **Mobile share:** the web app is installable as a PWA and registers a **Web Share Target**, so tapping _Share → ApplyTracker_ in the LinkedIn/Facebook app sends the link straight in
 - [ ] Browser extension button (Phase 6) for pages that need login
 
-**Backend pipeline** (`POST /api/v1/applications/import` → BullMQ job → status polled or pushed to the UI)
+**Backend pipeline** (`POST /api/v1/applications/import-link` → BullMQ job → status polled or pushed to the UI)
 
 1. Validate and normalise the URL (strip tracking params, resolve `lnkd.in` / `fb.me` short links), detect duplicates by canonical URL
 2. Fetch the public page server-side (timeout, size limit, SSRF protection: block private IPs)
@@ -209,4 +211,4 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ## 8. Next Step
 
-Start **Phase 2**: the core tracker — application CRUD, Kanban board with drag-and-drop, list view with filters.
+Start **Phase 2.5**: import a job from a LinkedIn / Facebook / job-board link — or deploy the MVP first.

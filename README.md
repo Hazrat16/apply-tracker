@@ -4,6 +4,15 @@ A full-stack job application tracker: organise applications on a Kanban board, i
 
 > 🚧 In active development. See [PLAN.md](PLAN.md) for the roadmap.
 
+## Features
+
+- **Kanban board** — drag applications between stages (mouse, touch or keyboard), with optimistic updates
+- **List view** — search, filter by status / work mode / priority / tag, sort, paginate; every view is a shareable URL
+- **Application pages** — activity timeline, notes, interviews with outcomes, recruiter contacts, job description
+- **Tags, priority and archiving**
+- **CSV import / export**
+- **Accounts** — email + password or Google, email verification, password reset, profile and account deletion
+
 ## Tech stack
 
 | Area     | Tools                                                                                    |
@@ -71,7 +80,10 @@ pnpm db:up
 # 4. Apply database migrations
 pnpm --filter @apply-tracker/api db:migrate
 
-# 5. Run everything in watch mode
+# 5. (Optional) Load demo data — sign in as demo@applytracker.dev / demo-pass-123
+pnpm --filter @apply-tracker/api db:seed
+
+# 6. Run everything in watch mode
 pnpm dev
 ```
 
@@ -100,7 +112,9 @@ Run from the repository root:
 | `pnpm format`                 | Format with Prettier                                           |
 | `pnpm db:up` / `pnpm db:down` | Start / stop local Docker services                             |
 
-Database (run with `pnpm --filter @apply-tracker/api <script>`): `db:migrate`, `db:deploy`, `db:studio`, `db:reset`.
+Database (run with `pnpm --filter @apply-tracker/api <script>`): `db:migrate`, `db:deploy`, `db:seed`, `db:studio`, `db:reset`.
+
+> Tests run one Vitest worker per CPU core. On a machine that's low on memory, limit them, e.g. `pnpm --filter @apply-tracker/web test -- --maxWorkers=2`.
 
 ## Contributing workflow
 

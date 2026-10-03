@@ -72,6 +72,8 @@ export async function apiFetch<T = void>(
   path: string,
   options: RequestOptions<T> = {},
 ): Promise<T> {
+  // FormData (file uploads) is sent as multipart; the browser sets the boundary header.
+  const isForm = options.body instanceof FormData;
   const send = () =>
     fetch(`${env.NEXT_PUBLIC_API_URL}${path}`, {
       method: options.method ?? 'GET',
@@ -79,9 +81,13 @@ export async function apiFetch<T = void>(
       signal: options.signal,
       headers: {
         Accept: 'application/json',
-        ...(options.body !== undefined && { 'Content-Type': 'application/json' }),
+        ...(options.body !== undefined && !isForm && { 'Content-Type': 'application/json' }),
       },
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: isForm
+        ? (options.body as FormData)
+        : options.body !== undefined
+          ? JSON.stringify(options.body)
+          : undefined,
     });
 
   let res = await send();

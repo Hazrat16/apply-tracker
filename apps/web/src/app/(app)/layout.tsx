@@ -1,3 +1,4 @@
+import { AppNav } from '@/components/app-nav';
 import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { AuthGate } from '@/features/auth/components/auth-gate';
@@ -8,8 +9,11 @@ export default function AppLayout({ children }: LayoutProps<'/'>) {
   return (
     <div className="flex min-h-svh flex-col">
       <header className="border-b">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <Logo href="/dashboard" />
+        <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <Logo href="/board" />
+            <AppNav />
+          </div>
           <div className="flex items-center gap-1">
             <ThemeToggle />
             <UserMenu />
@@ -17,7 +21,7 @@ export default function AppLayout({ children }: LayoutProps<'/'>) {
         </div>
       </header>
       <VerifyEmailBanner />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 px-4 py-8">
         <AuthGate>{children}</AuthGate>
       </main>
     </div>

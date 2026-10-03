@@ -35,11 +35,11 @@ export function VerifyEmailStatus() {
           <AlertTitle>Verification failed</AlertTitle>
           <AlertDescription>
             {error?.message ?? 'This verification link is incomplete.'} You can request a new link
-            from your dashboard.
+            from the banner at the top of the app.
           </AlertDescription>
         </Alert>
-        <ButtonLink href="/dashboard" className="w-full">
-          Go to dashboard
+        <ButtonLink href="/board" className="w-full">
+          Go to your board
         </ButtonLink>
       </div>
     );
@@ -61,8 +61,8 @@ export function VerifyEmailStatus() {
         <AlertTitle>Email verified</AlertTitle>
         <AlertDescription>Thanks for confirming your email address.</AlertDescription>
       </Alert>
-      <ButtonLink href="/dashboard" className="w-full">
-        Continue to dashboard
+      <ButtonLink href="/board" className="w-full">
+        Continue to your board
       </ButtonLink>
     </div>
   );

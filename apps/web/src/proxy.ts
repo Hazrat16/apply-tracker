@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 /** Set by the API alongside the httpOnly auth cookies; signals that a session probably exists. */
 const SESSION_HINT_COOKIE = 'logged_in';
 
-const PROTECTED_PREFIXES = ['/dashboard', '/settings'];
+const PROTECTED_PREFIXES = ['/dashboard', '/board', '/applications', '/settings'];
 const GUEST_ONLY = ['/login', '/register'];
 
 /**
@@ -24,12 +24,19 @@ export function proxy(request: NextRequest) {
   }
 
   if (hasSession && GUEST_ONLY.includes(pathname)) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/board', request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/settings/:path*', '/login', '/register'],
+  matcher: [
+    '/dashboard/:path*',
+    '/board/:path*',
+    '/applications/:path*',
+    '/settings/:path*',
+    '/login',
+    '/register',
+  ],
 };

@@ -42,7 +42,7 @@ export function RegisterForm() {
       toast.success('Account created', {
         description: `We sent a verification link to ${email}.`,
       });
-      router.replace('/dashboard');
+      router.replace('/board');
     } catch (error) {
       applyApiError(error, setError, ['name', 'email', 'password']);
     }

@@ -70,3 +70,13 @@ export function getCookie(res: request.Response, name: string): string | undefin
   const header = res.headers['set-cookie'] as unknown as string[] | undefined;
   return header?.find((c) => c.startsWith(`${name}=`));
 }
+
+/** Registers a user and returns an agent signed in as them. */
+export async function signedInAgent(ctx: TestContext, email = validUser.email) {
+  const agent = ctx.agent();
+  await agent
+    .post('/api/v1/auth/register')
+    .send({ ...validUser, email })
+    .expect(201);
+  return agent;
+}

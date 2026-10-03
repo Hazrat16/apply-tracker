@@ -13,6 +13,6 @@ describe('safeRedirectPath', () => {
     '/\\evil.example',
     'javascript:alert(1)',
   ])('falls back for %s', (path) => {
-    expect(safeRedirectPath(path)).toBe('/dashboard');
+    expect(safeRedirectPath(path)).toBe('/board');
   });
 });

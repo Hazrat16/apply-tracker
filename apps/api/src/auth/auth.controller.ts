@@ -214,7 +214,7 @@ export class AuthController {
       const profile = await this.google.exchangeCode(code, codeVerifier);
       const tokens = await this.auth.loginWithGoogle(profile, clientInfo(req));
       setAuthCookies(res, tokens, this.cookies);
-      res.redirect(`${this.webUrl}/dashboard`);
+      res.redirect(`${this.webUrl}/board`);
     } catch {
       res.redirect(`${this.webUrl}/login?error=oauth_failed`);
     }

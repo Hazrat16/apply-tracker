@@ -5,6 +5,7 @@ import { ConnectedAccounts } from '@/features/settings/connected-accounts';
 import { DeleteAccount } from '@/features/settings/delete-account';
 import { PasswordForm } from '@/features/settings/password-form';
 import { ProfileForm } from '@/features/settings/profile-form';
+import { TagsSettings } from '@/features/settings/tags-settings';
 
 export function SettingsView() {
   // AuthGate guarantees the user is loaded before this renders.
@@ -17,6 +18,7 @@ export function SettingsView() {
       <ProfileForm user={user} />
       <PasswordForm key={String(user.hasPassword)} user={user} />
       <ConnectedAccounts user={user} />
+      <TagsSettings />
       <DeleteAccount user={user} />
     </div>
   );

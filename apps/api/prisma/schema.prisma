@@ -25,6 +25,9 @@ model User {
   accounts           Account[]
   sessions           Session[]
   verificationTokens VerificationToken[]
+  companies          Company[]
+  applications       Application[]
+  tags               Tag[]
 
   @@map("users")
 }
@@ -104,4 +107,188 @@ model VerificationToken {
 
   @@index([userId, type])
   @@map("verification_tokens")
+}
+
+// ── Job tracking ────────────────────────────────────────────────────────────
+
+enum ApplicationStatus {
+  WISHLIST
+  APPLIED
+  ASSESSMENT
+  INTERVIEW
+  OFFER
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  GHOSTED
+}
+
+enum WorkMode {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum ApplicationSource {
+  LINKEDIN
+  INDEED
+  COMPANY_WEBSITE
+  REFERRAL
+  RECRUITER
+  FACEBOOK
+  JOB_BOARD
+  OTHER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InterviewType {
+  PHONE_SCREEN
+  TECHNICAL
+  BEHAVIORAL
+  TAKE_HOME
+  ONSITE
+  FINAL
+  OTHER
+}
+
+enum InterviewOutcome {
+  PENDING
+  PASSED
+  FAILED
+  CANCELLED
+}
+
+model Company {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  name           String
+  /// Lower-cased name: "Acme" and "acme " are the same company for a user.
+  normalizedName String   @map("normalized_name")
+  website        String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@unique([userId, normalizedName])
+  @@map("companies")
+}
+
+model Application {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  userId         String             @map("user_id") @db.Uuid
+  companyId      String             @map("company_id") @db.Uuid
+  roleTitle      String             @map("role_title")
+  status         ApplicationStatus  @default(WISHLIST)
+  /// Order within the board column (ascending). Fractional so a move only rewrites one row.
+  position       Float              @default(0)
+  jobUrl         String?            @map("job_url")
+  jobDescription String?            @map("job_description")
+  location       String?
+  workMode       WorkMode?          @map("work_mode")
+  source         ApplicationSource?
+  priority       Priority           @default(MEDIUM)
+  salaryMin      Int?               @map("salary_min")
+  salaryMax      Int?               @map("salary_max")
+  currency       String             @default("USD") @db.Char(3)
+  appliedAt      DateTime?          @map("applied_at") @db.Date
+  archivedAt     DateTime?          @map("archived_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: NoAction)
+  tags          Tag[]
+  notes         Note[]
+  contacts      Contact[]
+  interviews    Interview[]
+  statusHistory StatusChange[]
+
+  @@index([userId, status, position])
+  @@index([userId, updatedAt])
+  @@index([companyId])
+  @@map("applications")
+}
+
+model Tag {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String
+  color     String   @default("gray")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model Note {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  applicationId String   @map("application_id") @db.Uuid
+  body          String
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@map("notes")
+}
+
+model Contact {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  applicationId String   @map("application_id") @db.Uuid
+  name          String
+  role          String?
+  email         String?
+  phone         String?
+  linkedinUrl   String?  @map("linkedin_url")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@map("contacts")
+}
+
+model Interview {
+  id              String           @id @default(uuid(7)) @db.Uuid
+  applicationId   String           @map("application_id") @db.Uuid
+  type            InterviewType
+  scheduledAt     DateTime         @map("scheduled_at")
+  durationMinutes Int?             @map("duration_minutes")
+  location        String?
+  notes           String?
+  outcome         InterviewOutcome @default(PENDING)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, scheduledAt])
+  @@map("interviews")
+}
+
+/// Every status change, for the activity timeline and (later) analytics.
+model StatusChange {
+  id            String             @id @default(uuid(7)) @db.Uuid
+  applicationId String             @map("application_id") @db.Uuid
+  fromStatus    ApplicationStatus? @map("from_status")
+  toStatus      ApplicationStatus  @map("to_status")
+  changedAt     DateTime           @default(now()) @map("changed_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, changedAt])
+  @@map("status_changes")
 }

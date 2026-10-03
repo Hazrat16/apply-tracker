@@ -22,7 +22,7 @@ describe('proxy', () => {
 
   it('sends signed-in users away from the login page', () => {
     expect(proxy(request('/login', true)).headers.get('location')).toBe(
-      'http://localhost:3000/dashboard',
+      'http://localhost:3000/board',
     );
   });
 
