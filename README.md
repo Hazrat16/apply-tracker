@@ -16,6 +16,7 @@ A full-stack job application tracker: organise applications on a Kanban board, i
 - **Tags, priority and archiving**
 - **CSV import / export**
 - **Resumes** — upload PDF resumes; their text is extracted for AI matching (stored in S3 or, with no bucket configured, in Postgres)
+- **Resume match & cover letters** — a 0–100 score between a resume and the job description with matched/missing skills and resume suggestions, and editable cover letter drafts in your choice of tone. Works for free out of the box (built-in matcher); optionally uses a local AI model (Ollama) or any OpenAI-compatible API
 - **Accounts** — email + password or Google, email verification, password reset, profile and account deletion
 
 ## Tech stack
@@ -90,10 +91,36 @@ Reminders, emails and scheduled scans run on **BullMQ** (Redis):
 | `follow-up-suggestions` | Every 6 hours                         | Suggests following up on applications with no activity for N days |
 | `weekly-summaries`      | Hourly                                | Sends each user's summary on Monday 08:00 in their time zone      |
 | `send` (email queue)    | On demand                             | Delivers email, retried with exponential backoff                  |
+| `resume-match` (ai)     | On demand                             | Scores a resume against a job description                         |
+| `cover-letter` (ai)     | On demand                             | Drafts a cover letter                                             |
+
+AI jobs move each result through `PENDING → RUNNING → DONE / FAILED` (the web app polls until it settles). Rate limits, server errors and malformed model output are retried up to 3 times; refusals and invalid requests (e.g. an unknown model name) fail straight away.
 
 Every job is idempotent: reminders are claimed atomically in the database and notifications carry a per-user unique dedupe key, so retries and overlapping runs never notify twice.
 
 Workers run inside the API process by default. In production, set `RUN_WORKERS=false` on the API and run `pnpm --filter @apply-tracker/api start:worker` (`node dist/worker.js`) as a separate, independently scalable process.
+
+## Resume matching & cover letters — free by default
+
+Matching and cover letters run through a pluggable engine (`AI_PROVIDER`). None of them is required, and the default costs nothing:
+
+| Engine              | Cost                                          | How it works                                                                                                                                                                |
+| ------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `builtin` (default) | Free, offline                                 | Recognises ~150 skills (with aliases such as Postgres → PostgreSQL), falls back to frequent keywords, weights skills the posting repeats, and fills a cover letter template |
+| `openai-compatible` | Free with a local model or a free hosted tier | Any OpenAI-style API: **Ollama** or LM Studio on your own machine, or hosted free tiers such as Groq, Google Gemini or OpenRouter                                           |
+| `anthropic`         | Paid                                          | Claude; picked automatically when `ANTHROPIC_API_KEY` is set                                                                                                                |
+
+Use a free local model with [Ollama](https://ollama.com):
+
+```bash
+ollama pull llama3.2
+# apps/api/.env
+AI_PROVIDER=openai-compatible
+AI_BASE_URL=http://localhost:11434/v1
+AI_MODEL=llama3.2
+```
+
+The skills list lives in `apps/api/src/ai/builtin/skills.ts`. Adding entries is the easiest way to improve the built-in matcher, and a good first contribution.
 
 ## File storage
 

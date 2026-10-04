@@ -25,7 +25,7 @@ A full-stack job application tracker: manage every application on a Kanban board
 | Auth               | **JWT access + refresh tokens (httpOnly cookies), Google OAuth, bcrypt**                           | Secure auth done properly                                              |
 | File storage       | **S3-compatible (AWS S3 / Cloudflare R2)** with a **Postgres fallback** (and local disk) driver    | Resume PDF uploads without depending on a paid cloud account           |
 | Email              | **Resend** (or Nodemailer + SMTP)                                                                  | Verification, password reset, reminders                                |
-| AI                 | **Claude API**                                                                                     | Resume ↔ job description matching, cover letter drafts                 |
+| AI                 | Pluggable: free **built-in matcher** (default), **Ollama** / any OpenAI-compatible API, Claude     | Matching and cover letters at zero cost; real LLMs when available      |
 | API docs           | **Swagger / OpenAPI** (auto-generated)                                                             | Professional API                                                       |
 | Testing            | **Vitest** (API unit + e2e with Supertest, web with Testing Library), **Playwright** (browser E2E) | Shows quality mindset                                                  |
 | Code quality       | oxlint (API), ESLint (web), Prettier, Husky + lint-staged, Conventional Commits                    | Team-ready workflow                                                    |
@@ -175,10 +175,11 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 - [x] Pluggable file storage: `s3` (AWS S3 / R2 / B2 / MinIO), `database` (Postgres — default when no bucket is set, survives ephemeral free-tier disks) and `local`; each file records its driver so switching is safe
 - [x] Resume upload API (PDF ≤ 5 MB, 10 per user), text extraction with `unpdf`, download, rename, delete, cleanup on account deletion
-- [ ] Resume management UI (settings → Resumes)
-- [ ] **Resume ↔ JD match score**: matched/missing skills, suggestions (Claude API, run as a background job)
-- [ ] Cover letter draft generator
-- [ ] Parse a pasted job posting → auto-fill application fields
+- [x] Resume management UI (Settings → Resumes: upload, rename, open, delete)
+- [x] Pluggable AI engine — `builtin` (default: free keyword/skills matcher + letter template, no network), `openai-compatible` (Ollama, LM Studio, Groq, Gemini, OpenRouter…) or `anthropic`
+- [x] **Resume ↔ JD match score**: 0–100 score, matched/missing skills, resume suggestions (`ai` BullMQ queue, retries for temporary errors, UI polls until done)
+- [x] Cover letter draft generator (tone + optional notes, editable and copyable drafts, last 10 kept per application)
+- [x] Parse a pasted job posting → auto-fill application fields (delivered in Phase 2.5: "paste job text" import)
 
 ### Phase 6 — Polish & Production
 
@@ -218,4 +219,4 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ## 8. Next Step
 
-Start **Phase 5**: AI features (resume ↔ job match, cover letters) — or deploy the MVP first.
+Start **Phase 6**: polish and production (browser extension, accessibility, deployment, demo account).

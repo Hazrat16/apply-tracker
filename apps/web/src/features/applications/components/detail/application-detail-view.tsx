@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AiAssistant } from '@/features/ai/ai-assistant';
 import { ApiError } from '@/lib/api-client';
 import { useApplication } from '../../hooks';
 import { ActivityTimeline } from './activity-timeline';
@@ -55,6 +56,7 @@ export function ApplicationDetailView({ id }: { id: string }) {
             <TabsTrigger value="interviews">Interviews ({app.interviews.length})</TabsTrigger>
             <TabsTrigger value="contacts">Contacts ({app.contacts.length})</TabsTrigger>
             <TabsTrigger value="reminders">Reminders</TabsTrigger>
+            <TabsTrigger value="ai">AI assistant</TabsTrigger>
           </TabsList>
           <TabsContent value="activity" className="pt-4">
             <ActivityTimeline application={app} />
@@ -67,6 +69,9 @@ export function ApplicationDetailView({ id }: { id: string }) {
           </TabsContent>
           <TabsContent value="reminders" className="pt-4">
             <RemindersSection application={app} />
+          </TabsContent>
+          <TabsContent value="ai" className="pt-4">
+            <AiAssistant application={app} />
           </TabsContent>
         </Tabs>
 

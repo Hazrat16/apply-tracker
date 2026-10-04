@@ -1,4 +1,4 @@
-import { resolveStorageDriver, validateEnv } from './env.js';
+import { resolveAiProvider, resolveStorageDriver, validateEnv } from './env.js';
 
 const base = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
@@ -57,5 +57,33 @@ describe('storage settings', () => {
 
   it('rejects an unknown driver', () => {
     expect(() => validateEnv({ ...base, STORAGE_DRIVER: 'ftp' })).toThrow(/STORAGE_DRIVER/);
+  });
+});
+
+describe('AI settings', () => {
+  it('uses the free built-in engine without an API key', () => {
+    expect(resolveAiProvider(validateEnv(base))).toBe('builtin');
+  });
+
+  it('uses Claude when a key is set, unless another provider is chosen', () => {
+    expect(resolveAiProvider(validateEnv({ ...base, ANTHROPIC_API_KEY: 'k' }))).toBe('anthropic');
+    expect(
+      resolveAiProvider(validateEnv({ ...base, ANTHROPIC_API_KEY: 'k', AI_PROVIDER: 'builtin' })),
+    ).toBe('builtin');
+  });
+
+  it('requires an endpoint and model for OpenAI-compatible servers', () => {
+    expect(() => validateEnv({ ...base, AI_PROVIDER: 'openai-compatible' })).toThrow(/AI_BASE_URL/);
+    const env = validateEnv({
+      ...base,
+      AI_PROVIDER: 'openai-compatible',
+      AI_BASE_URL: 'http://localhost:11434/v1',
+      AI_MODEL: 'llama3.2',
+    });
+    expect(resolveAiProvider(env)).toBe('openai-compatible');
+  });
+
+  it('requires a key for the anthropic provider', () => {
+    expect(() => validateEnv({ ...base, AI_PROVIDER: 'anthropic' })).toThrow(/ANTHROPIC_API_KEY/);
   });
 });

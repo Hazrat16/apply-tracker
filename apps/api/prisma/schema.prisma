@@ -226,6 +226,8 @@ model Application {
   statusHistory StatusChange[]
   reminders     Reminder[]
   notifications Notification[]
+  resumeMatches ResumeMatch[]
+  coverLetters  CoverLetter[]
 
   @@index([userId, status, position])
   @@index([userId, updatedAt])
@@ -383,7 +385,9 @@ model Resume {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches      ResumeMatch[]
+  coverLetters CoverLetter[]
 
   @@index([userId, createdAt])
   @@map("resumes")
@@ -397,4 +401,60 @@ model StoredFile {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("stored_files")
+}
+
+enum AiTaskStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+}
+
+/// AI comparison of a resume with an application's job description (one per pair; re-running replaces it).
+model ResumeMatch {
+  id            String       @id @default(uuid(7)) @db.Uuid
+  applicationId String       @map("application_id") @db.Uuid
+  resumeId      String       @map("resume_id") @db.Uuid
+  status        AiTaskStatus @default(PENDING)
+  score         Int?
+  summary       String?
+  matchedSkills String[]     @map("matched_skills")
+  missingSkills String[]     @map("missing_skills")
+  suggestions   String[]
+  error         String?
+  createdAt     DateTime     @default(now()) @map("created_at")
+  completedAt   DateTime?    @map("completed_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  resume      Resume      @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, resumeId])
+  @@map("resume_matches")
+}
+
+enum CoverLetterTone {
+  PROFESSIONAL
+  FRIENDLY
+  ENTHUSIASTIC
+}
+
+/// An AI-drafted cover letter, which the user can then edit.
+model CoverLetter {
+  id            String          @id @default(uuid(7)) @db.Uuid
+  applicationId String          @map("application_id") @db.Uuid
+  resumeId      String?         @map("resume_id") @db.Uuid
+  tone          CoverLetterTone
+  /// Extra points the user asked to include.
+  instructions  String?
+  status        AiTaskStatus    @default(PENDING)
+  content       String?
+  error         String?
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  resume      Resume?     @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@index([applicationId, createdAt])
+  @@map("cover_letters")
 }

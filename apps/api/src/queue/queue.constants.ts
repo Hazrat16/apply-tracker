@@ -1,5 +1,6 @@
 export const NOTIFICATIONS_QUEUE = 'notifications';
 export const EMAIL_QUEUE = 'email';
+export const AI_QUEUE = 'ai';
 
 /** Job names on the notifications queue. */
 export const NotificationJob = {
@@ -18,4 +19,14 @@ export interface ReminderDueData {
   reminderId: string;
   /** The due time this job was scheduled for; stale jobs for rescheduled reminders are skipped. */
   dueAt: string;
+}
+
+/** Job names on the AI queue; each carries the id of the row to fill in. */
+export const AiJob = {
+  ResumeMatch: 'resume-match',
+  CoverLetter: 'cover-letter',
+} as const;
+
+export interface AiJobData {
+  id: string;
 }

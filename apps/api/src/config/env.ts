@@ -12,6 +12,7 @@ const csv = (fallback: string) =>
     );
 
 export const STORAGE_DRIVERS = ['s3', 'database', 'local'] as const;
+export const AI_PROVIDERS = ['builtin', 'openai-compatible', 'anthropic'] as const;
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -53,6 +54,19 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   JOB_IMPORT_AI_MODEL: z.string().default('claude-opus-5-5'),
 
+  /**
+   * Engine for resume matching and cover letters. Defaults to `anthropic` when
+   * ANTHROPIC_API_KEY is set, otherwise `builtin` — a keyword matcher and letter template
+   * that need no AI service and cost nothing.
+   */
+  AI_PROVIDER: z.enum(AI_PROVIDERS).optional(),
+  /** OpenAI-compatible endpoint, e.g. Ollama: http://localhost:11434/v1 */
+  AI_BASE_URL: z.url().optional(),
+  /** API key for the OpenAI-compatible endpoint, if it needs one (Ollama doesn't). */
+  AI_API_KEY: z.string().optional(),
+  /** Model name; required for `openai-compatible`, defaults to claude-opus-5-5 for `anthropic`. */
+  AI_MODEL: z.string().optional(),
+
   // Google sign-in is enabled only when both are set.
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -79,12 +93,20 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 export type StorageDriverName = (typeof STORAGE_DRIVERS)[number];
+export type AiProviderName = (typeof AI_PROVIDERS)[number];
 
 /** The storage driver new files are written to. */
 export function resolveStorageDriver(
   env: Pick<Env, 'STORAGE_DRIVER' | 'S3_BUCKET'>,
 ): StorageDriverName {
   return env.STORAGE_DRIVER ?? (env.S3_BUCKET ? 's3' : 'database');
+}
+
+/** The engine used for resume matching and cover letters. */
+export function resolveAiProvider(
+  env: Pick<Env, 'AI_PROVIDER' | 'ANTHROPIC_API_KEY'>,
+): AiProviderName {
+  return env.AI_PROVIDER ?? (env.ANTHROPIC_API_KEY ? 'anthropic' : 'builtin');
 }
 
 /** Used by ConfigModule — fails fast at startup with a readable error if the env is invalid. */
@@ -102,6 +124,16 @@ export function validateEnv(config: Record<string, unknown>): Env {
   if (!env.S3_ACCESS_KEY_ID !== !env.S3_SECRET_ACCESS_KEY) {
     throw new Error(
       'Invalid environment variables:\nSet both S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY, or neither',
+    );
+  }
+  if (env.AI_PROVIDER === 'openai-compatible' && (!env.AI_BASE_URL || !env.AI_MODEL)) {
+    throw new Error(
+      'Invalid environment variables:\nAI_PROVIDER=openai-compatible requires AI_BASE_URL and AI_MODEL',
+    );
+  }
+  if (env.AI_PROVIDER === 'anthropic' && !env.ANTHROPIC_API_KEY) {
+    throw new Error(
+      'Invalid environment variables:\nAI_PROVIDER=anthropic requires ANTHROPIC_API_KEY',
     );
   }
   return env;

@@ -2,7 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../config/env.js';
-import { EMAIL_QUEUE, NOTIFICATIONS_QUEUE } from './queue.constants.js';
+import { AI_QUEUE, EMAIL_QUEUE, NOTIFICATIONS_QUEUE } from './queue.constants.js';
 import { redisOptionsFromUrl } from './redis-connection.js';
 
 const defaultJobOptions = {
@@ -26,6 +26,15 @@ const defaultJobOptions = {
     BullModule.registerQueue(
       { name: NOTIFICATIONS_QUEUE, defaultJobOptions },
       { name: EMAIL_QUEUE, defaultJobOptions },
+      // Claude calls are slow and cost money: fewer, longer-spaced retries.
+      {
+        name: AI_QUEUE,
+        defaultJobOptions: {
+          ...defaultJobOptions,
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 30_000 },
+        },
+      },
     ),
   ],
   exports: [BullModule],
