@@ -4,6 +4,7 @@ import { ConditionalModule, ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
+import { AnalyticsModule } from './analytics/analytics.module.js';
 import { ApplicationsModule } from './applications/applications.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AutomationModule } from './automation/automation.module.js';
@@ -65,6 +66,7 @@ import { UsersModule } from './users/users.module.js';
     RemindersModule,
     AutomationModule,
     CalendarModule,
+    AnalyticsModule,
     // Queue consumers run in the API process unless RUN_WORKERS=false (then `node dist/worker.js`).
     ConditionalModule.registerWhen(WorkersModule, (env) => env.RUN_WORKERS !== 'false'),
   ],

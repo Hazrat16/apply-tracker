@@ -99,6 +99,8 @@ export const notificationPreferencesSchema = z.object({
   /** Suggest a follow-up when an active application hasn't changed for this many days. */
   followUpAfterDays: z.number().int().min(1).max(60),
   timeZone: timeZoneSchema,
+  /** Applications per week to aim for; 0 turns the goal off. */
+  weeklyGoal: z.number().int().min(0).max(100),
 });
 export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
 

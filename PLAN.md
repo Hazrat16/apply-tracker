@@ -165,10 +165,11 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ### Phase 4 — Analytics Dashboard
 
-- [ ] KPIs: total applied, response rate, interview rate, offer rate
-- [ ] Funnel chart (Applied → Interview → Offer)
-- [ ] Applications per week, sources that perform best, average time to response
-- [ ] Weekly goal + streak tracking
+- [x] KPIs: applications sent, response / interview / offer rate with change vs the previous period, median days to first reply
+- [x] Funnel (Applied → Got a reply → Interviewed → Offer) with stage conversion
+- [x] Applications per week (with goal line), reply and interview rate by source, current pipeline
+- [x] Weekly goal + streak tracking (Mon–Sun in the user's time zone)
+- [x] Range filter (30 days / 90 days / 12 months / all time); every chart has a table view, hover/focus tooltips and validated light/dark colours
 
 ### Phase 5 — AI Features (the "wow" factor)
 
@@ -215,4 +216,4 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ## 8. Next Step
 
-Start **Phase 4**: analytics dashboard — or deploy the MVP first.
+Start **Phase 5**: AI features (resume ↔ job match, cover letters) — or deploy the MVP first.

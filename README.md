@@ -10,6 +10,7 @@ A full-stack job application tracker: organise applications on a Kanban board, i
 - **List view** — search, filter by status / work mode / priority / tag, sort, paginate; every view is a shareable URL
 - **Application pages** — activity timeline, notes, interviews with outcomes, recruiter contacts, job description
 - **Import from a link** — paste a LinkedIn, Indeed, Greenhouse or company job link (or share it from your phone) and the details are filled in for you to review; pages that need sign-in can be pasted as text (optional AI)
+- **Dashboard** — reply, interview and offer rates (vs the previous period), funnel, applications per week against a weekly goal and streak, which sources get replies
 - **Reminders & notifications** — reminders by email and in-app, follow-up suggestions for quiet applications, interview heads-ups, a weekly summary email
 - **Calendar** — agenda of interviews and reminders, `.ics` export and a private subscription link for Google Calendar / Outlook / Apple Calendar
 - **Tags, priority and archiving**

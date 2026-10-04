@@ -11,11 +11,11 @@ export default function AppLayout({ children }: LayoutProps<'/'>) {
     <div className="flex min-h-svh flex-col">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Logo href="/board" />
+          <div className="flex min-w-0 items-center gap-2 sm:gap-6">
+            <Logo href="/board" compact />
             <AppNav />
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
             <ThemeToggle />
             <NotificationBell />
             <UserMenu />

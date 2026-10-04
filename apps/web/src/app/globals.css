@@ -5,6 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-viz-series: var(--viz-series);
+  --color-viz-track: var(--viz-track);
+  --color-viz-delta-good: var(--viz-delta-good);
+  --color-viz-delta-bad: var(--viz-delta-bad);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -49,6 +53,15 @@
 }
 
 :root {
+  /* Data-viz roles (validated: palette checks pass on the card surface in each mode) */
+  --viz-series: #2a78d6;
+  --viz-track: #cde2fb;
+  --viz-funnel-1: #86b6ef;
+  --viz-funnel-2: #5598e7;
+  --viz-funnel-3: #256abf;
+  --viz-funnel-4: #104281;
+  --viz-delta-good: #006300;
+  --viz-delta-bad: #d03b3b;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -84,6 +97,15 @@
 }
 
 .dark {
+  /* Dark steps of the same ramp, validated against the dark card surface */
+  --viz-series: #3987e5;
+  --viz-track: #104281;
+  --viz-funnel-1: #184f95;
+  --viz-funnel-2: #256abf;
+  --viz-funnel-3: #3987e5;
+  --viz-funnel-4: #86b6ef;
+  --viz-delta-good: #0ca30c;
+  --viz-delta-bad: #e66767;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

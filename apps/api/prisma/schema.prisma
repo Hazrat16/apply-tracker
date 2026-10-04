@@ -25,6 +25,8 @@ model User {
   weeklySummary     Boolean  @default(true) @map("weekly_summary")
   followUpAfterDays Int      @default(7) @map("follow_up_after_days")
   timeZone          String   @default("UTC") @map("time_zone")
+  /// Applications per week the user aims for; 0 = no goal.
+  weeklyGoal        Int      @default(5) @map("weekly_goal")
   /// Secret token in the private calendar subscription URL.
   calendarToken     String?  @unique @map("calendar_token")
   createdAt         DateTime @default(now()) @map("created_at")

@@ -14,6 +14,7 @@ const preferenceFields = {
   weeklySummary: true,
   followUpAfterDays: true,
   timeZone: true,
+  weeklyGoal: true,
 } as const;
 
 export type UserWithAccounts = Prisma.UserGetPayload<{ include: typeof userWithAccounts }>;

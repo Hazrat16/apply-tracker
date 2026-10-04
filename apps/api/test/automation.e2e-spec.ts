@@ -316,6 +316,7 @@ describe('Reminders, notifications & calendar (e2e)', () => {
         weeklySummary: true,
         followUpAfterDays: 7,
         timeZone: 'UTC',
+        weeklyGoal: 5,
       });
       const res = await jane
         .patch('/api/v1/users/me/preferences')

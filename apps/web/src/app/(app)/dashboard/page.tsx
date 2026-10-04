@@ -1,6 +1,8 @@
-import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import { DashboardView } from '@/features/analytics/dashboard-view';
 
-// The analytics dashboard arrives in a later phase; until then the board is home.
+export const metadata: Metadata = { title: 'Dashboard' };
+
 export default function DashboardPage() {
-  redirect('/board');
+  return <DashboardView />;
 }
