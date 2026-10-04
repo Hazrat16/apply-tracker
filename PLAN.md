@@ -23,7 +23,7 @@ A full-stack job application tracker: manage every application on a Kanban board
 | Database           | **PostgreSQL 17 + Prisma 7 ORM**                                                                   | Relational modelling, migrations                                       |
 | Cache / queue      | **Redis + BullMQ**                                                                                 | Background jobs (reminders, emails, AI tasks)                          |
 | Auth               | **JWT access + refresh tokens (httpOnly cookies), Google OAuth, bcrypt**                           | Secure auth done properly                                              |
-| File storage       | **S3-compatible (AWS S3 / Cloudflare R2)**; local S3 emulator chosen in Phase 5                    | Resume PDF uploads                                                     |
+| File storage       | **S3-compatible (AWS S3 / Cloudflare R2)** with a **Postgres fallback** (and local disk) driver    | Resume PDF uploads without depending on a paid cloud account           |
 | Email              | **Resend** (or Nodemailer + SMTP)                                                                  | Verification, password reset, reminders                                |
 | AI                 | **Claude API**                                                                                     | Resume ↔ job description matching, cover letter drafts                 |
 | API docs           | **Swagger / OpenAPI** (auto-generated)                                                             | Professional API                                                       |
@@ -173,7 +173,9 @@ Paste or share a job URL → the job lands on the board in **Wishlist** with fie
 
 ### Phase 5 — AI Features (the "wow" factor)
 
-- [ ] Resume upload (PDF → S3), text extraction
+- [x] Pluggable file storage: `s3` (AWS S3 / R2 / B2 / MinIO), `database` (Postgres — default when no bucket is set, survives ephemeral free-tier disks) and `local`; each file records its driver so switching is safe
+- [x] Resume upload API (PDF ≤ 5 MB, 10 per user), text extraction with `unpdf`, download, rename, delete, cleanup on account deletion
+- [ ] Resume management UI (settings → Resumes)
 - [ ] **Resume ↔ JD match score**: matched/missing skills, suggestions (Claude API, run as a background job)
 - [ ] Cover letter draft generator
 - [ ] Parse a pasted job posting → auto-fill application fields

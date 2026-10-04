@@ -30,3 +30,6 @@ test-results/
 .DS_Store
 .idea/
 *.pem
+
+# Files written by STORAGE_DRIVER=local
+apps/api/storage/

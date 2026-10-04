@@ -1,4 +1,4 @@
-import { validateEnv } from './env.js';
+import { resolveStorageDriver, validateEnv } from './env.js';
 
 const base = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
@@ -32,5 +32,30 @@ describe('validateEnv', () => {
 
   it('rejects a short JWT secret', () => {
     expect(() => validateEnv({ ...base, JWT_ACCESS_SECRET: 'short' })).toThrow(/JWT_ACCESS_SECRET/);
+  });
+});
+
+describe('storage settings', () => {
+  it('falls back to the database driver without an S3 bucket', () => {
+    expect(resolveStorageDriver(validateEnv(base))).toBe('database');
+  });
+
+  it('uses S3 when a bucket is set, unless another driver is chosen', () => {
+    expect(resolveStorageDriver(validateEnv({ ...base, S3_BUCKET: 'resumes' }))).toBe('s3');
+    expect(
+      resolveStorageDriver(validateEnv({ ...base, S3_BUCKET: 'resumes', STORAGE_DRIVER: 'local' })),
+    ).toBe('local');
+  });
+
+  it('requires a bucket for the s3 driver', () => {
+    expect(() => validateEnv({ ...base, STORAGE_DRIVER: 's3' })).toThrow(/S3_BUCKET/);
+  });
+
+  it('requires both S3 keys or neither', () => {
+    expect(() => validateEnv({ ...base, S3_ACCESS_KEY_ID: 'id' })).toThrow(/S3_SECRET_ACCESS_KEY/);
+  });
+
+  it('rejects an unknown driver', () => {
+    expect(() => validateEnv({ ...base, STORAGE_DRIVER: 'ftp' })).toThrow(/STORAGE_DRIVER/);
   });
 });

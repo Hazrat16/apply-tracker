@@ -21,6 +21,8 @@ import { NotificationsModule } from './notifications/notifications.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { QueueModule } from './queue/queue.module.js';
 import { RemindersModule } from './reminders/reminders.module.js';
+import { ResumesModule } from './resumes/resumes.module.js';
+import { StorageModule } from './storage/storage.module.js';
 import { TagsModule } from './tags/tags.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -54,6 +56,7 @@ import { UsersModule } from './users/users.module.js';
       }),
     }),
     PrismaModule,
+    StorageModule,
     QueueModule,
     MailModule,
     HealthModule,
@@ -67,6 +70,7 @@ import { UsersModule } from './users/users.module.js';
     AutomationModule,
     CalendarModule,
     AnalyticsModule,
+    ResumesModule,
     // Queue consumers run in the API process unless RUN_WORKERS=false (then `node dist/worker.js`).
     ConditionalModule.registerWhen(WorkersModule, (env) => env.RUN_WORKERS !== 'false'),
   ],

@@ -13,11 +13,12 @@ import type {
   RegisterInput,
   User as PublicUser,
 } from '@apply-tracker/shared';
-import type { Env } from '../config/env.js';
+import type { Env, StorageDriverName } from '../config/env.js';
 import { Prisma, VerificationTokenType } from '../generated/prisma/client.js';
 import { MailService } from '../mail/mail.service.js';
 import { resetPasswordMessage, verifyEmailMessage } from '../mail/templates.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { StorageService } from '../storage/storage.service.js';
 import { UsersService } from '../users/users.service.js';
 import type { ClientInfo, IssuedTokens } from './auth.types.js';
 import { PasswordService } from './password.service.js';
@@ -49,6 +50,7 @@ export class AuthService {
     private readonly sessions: SessionService,
     private readonly verificationTokens: VerificationTokenService,
     private readonly mail: MailService,
+    private readonly storage: StorageService,
     config: ConfigService<Env, true>,
   ) {
     this.webUrl = config.get('WEB_URL', { infer: true });
@@ -221,8 +223,16 @@ export class AuthService {
         (await this.passwords.verify(user.passwordHash, input.password));
       if (!valid) throw new BadRequestException('Password is incorrect');
     }
-    // Sessions, tokens and linked accounts are removed by cascading deletes.
+    const files = await this.prisma.resume.findMany({
+      where: { userId },
+      select: { storageDriver: true, storageKey: true },
+    });
+    // Sessions, tokens, linked accounts and resume records are removed by cascading deletes.
     await this.prisma.user.delete({ where: { id: userId } });
+    // Uploaded files live outside the users table, so remove them explicitly.
+    await this.storage.deleteQuietly(
+      files.map((f) => ({ driver: f.storageDriver as StorageDriverName, key: f.storageKey })),
+    );
   }
 
   private async sendVerificationEmail(userId: string, email: string, name: string | null) {

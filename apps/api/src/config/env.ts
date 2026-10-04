@@ -11,6 +11,8 @@ const csv = (fallback: string) =>
         .filter(Boolean),
     );
 
+export const STORAGE_DRIVERS = ['s3', 'database', 'local'] as const;
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
@@ -54,9 +56,36 @@ const envSchema = z.object({
   // Google sign-in is enabled only when both are set.
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+
+  /**
+   * Where uploaded files (resumes) are kept. Defaults to `s3` when S3_BUCKET is set, otherwise
+   * `database` (Postgres), which needs no extra service and survives ephemeral host disks.
+   */
+  STORAGE_DRIVER: z.enum(STORAGE_DRIVERS).optional(),
+  /** Folder for the `local` driver — only safe on a host with a persistent disk. */
+  STORAGE_LOCAL_DIR: z.string().default('./storage'),
+  // Any S3-compatible service: AWS S3, Cloudflare R2, Backblaze B2, MinIO, Supabase Storage…
+  S3_BUCKET: z.string().optional(),
+  /** `auto` for Cloudflare R2. */
+  S3_REGION: z.string().default('us-east-1'),
+  /** Leave empty for AWS; required for other providers, e.g. https://<account>.r2.cloudflarestorage.com */
+  S3_ENDPOINT: z.url().optional(),
+  /** Leave both empty to use the AWS default credential chain (IAM role, ~/.aws…). */
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  /** Path-style URLs (bucket in the path) — needed by MinIO and most self-hosted servers. */
+  S3_FORCE_PATH_STYLE: z.stringbool().default(false),
 });
 
 export type Env = z.infer<typeof envSchema>;
+export type StorageDriverName = (typeof STORAGE_DRIVERS)[number];
+
+/** The storage driver new files are written to. */
+export function resolveStorageDriver(
+  env: Pick<Env, 'STORAGE_DRIVER' | 'S3_BUCKET'>,
+): StorageDriverName {
+  return env.STORAGE_DRIVER ?? (env.S3_BUCKET ? 's3' : 'database');
+}
 
 /** Used by ConfigModule — fails fast at startup with a readable error if the env is invalid. */
 export function validateEnv(config: Record<string, unknown>): Env {
@@ -66,5 +95,14 @@ export function validateEnv(config: Record<string, unknown>): Env {
   if (!result.success) {
     throw new Error(`Invalid environment variables:\n${z.prettifyError(result.error)}`);
   }
-  return result.data;
+  const env = result.data;
+  if (env.STORAGE_DRIVER === 's3' && !env.S3_BUCKET) {
+    throw new Error('Invalid environment variables:\nSTORAGE_DRIVER=s3 requires S3_BUCKET');
+  }
+  if (!env.S3_ACCESS_KEY_ID !== !env.S3_SECRET_ACCESS_KEY) {
+    throw new Error(
+      'Invalid environment variables:\nSet both S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY, or neither',
+    );
+  }
+  return env;
 }

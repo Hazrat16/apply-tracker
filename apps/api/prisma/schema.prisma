@@ -40,6 +40,7 @@ model User {
   tags               Tag[]
   reminders          Reminder[]
   notifications      Notification[]
+  resumes            Resume[]
 
   @@map("users")
 }
@@ -362,4 +363,38 @@ model Notification {
   @@unique([userId, dedupeKey])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+/// An uploaded resume (PDF). The file itself lives in file storage (see StorageService).
+model Resume {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  label         String
+  /// Name of the uploaded file, shown to the user and used for downloads.
+  fileName      String   @map("file_name")
+  contentType   String   @map("content_type")
+  sizeBytes     Int      @map("size_bytes")
+  /// Driver that holds the file (s3 / database / local), so switching drivers keeps old files readable.
+  storageDriver String   @map("storage_driver")
+  storageKey    String   @unique @map("storage_key")
+  /// Plain text extracted from the PDF (empty for scanned documents without a text layer).
+  text          String
+  pageCount     Int      @map("page_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("resumes")
+}
+
+/// File contents for the `database` storage driver — the zero-cost fallback when no S3 bucket is set.
+model StoredFile {
+  key         String   @id
+  data        Bytes
+  contentType String   @map("content_type")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("stored_files")
 }

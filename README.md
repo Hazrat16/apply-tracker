@@ -15,6 +15,7 @@ A full-stack job application tracker: organise applications on a Kanban board, i
 - **Calendar** — agenda of interviews and reminders, `.ics` export and a private subscription link for Google Calendar / Outlook / Apple Calendar
 - **Tags, priority and archiving**
 - **CSV import / export**
+- **Resumes** — upload PDF resumes; their text is extracted for AI matching (stored in S3 or, with no bucket configured, in Postgres)
 - **Accounts** — email + password or Google, email verification, password reset, profile and account deletion
 
 ## Tech stack
@@ -93,6 +94,18 @@ Reminders, emails and scheduled scans run on **BullMQ** (Redis):
 Every job is idempotent: reminders are claimed atomically in the database and notifications carry a per-user unique dedupe key, so retries and overlapping runs never notify twice.
 
 Workers run inside the API process by default. In production, set `RUN_WORKERS=false` on the API and run `pnpm --filter @apply-tracker/api start:worker` (`node dist/worker.js`) as a separate, independently scalable process.
+
+## File storage
+
+Uploaded resumes go through `StorageService`, which has three interchangeable drivers:
+
+| Driver     | Where files live                                                      | Use it for                                           |
+| ---------- | --------------------------------------------------------------------- | ---------------------------------------------------- |
+| `s3`       | Any S3-compatible bucket: AWS S3, Cloudflare R2, Backblaze B2, MinIO… | Production, when you have a bucket                   |
+| `database` | A `stored_files` table in Postgres                                    | **Default fallback.** Free hosting, local dev, demos |
+| `local`    | A folder on disk (`STORAGE_LOCAL_DIR`)                                | Dev, or a server with a persistent volume            |
+
+With `STORAGE_DRIVER` unset, the API uses `s3` when `S3_BUCKET` is set and `database` otherwise, so the app runs without any cloud account. Each resume records the driver that stored it, so changing drivers later keeps old files readable as long as their storage still exists. Files in a driver that is no longer configured return `503`, but their extracted text still works. Resumes are capped at 5 MB and 10 per user, which keeps the Postgres fallback small enough for free database tiers.
 
 ## Getting started
 

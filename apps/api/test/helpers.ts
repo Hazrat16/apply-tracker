@@ -57,7 +57,7 @@ export async function createTestApp(overrides: ProviderOverride[] = []): Promise
     mail,
     agent: () => request.agent(app.getHttpServer()),
     resetDb: async () => {
-      await prisma.$executeRawUnsafe('TRUNCATE TABLE users CASCADE');
+      await prisma.$executeRawUnsafe('TRUNCATE TABLE users, stored_files CASCADE');
       mail.sent.length = 0;
     },
   };
