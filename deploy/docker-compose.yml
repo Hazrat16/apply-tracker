@@ -1,0 +1,87 @@
+# Pulled by CI onto the server. Images are built in GitHub Actions, not on the machine.
+name: apply-tracker
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+
+  web:
+    image: ${IMAGE_REGISTRY}/apply-tracker-web:${IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:4000
+    depends_on:
+      - api
+
+  api:
+    image: ${IMAGE_REGISTRY}/apply-tracker-api:${IMAGE_TAG}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RUN_MIGRATIONS: 'true'
+      RUN_WORKERS: 'false'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: ${IMAGE_REGISTRY}/apply-tracker-api:${IMAGE_TAG}
+    restart: unless-stopped
+    command: ['worker']
+    env_file: .env
+    environment:
+      RUN_MIGRATIONS: 'false'
+      RUN_WORKERS: 'true'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: apply
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: apply_tracker
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U apply -d apply_tracker']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  caddy-data:
+  caddy-config:
+  postgres-data:
+  redis-data:

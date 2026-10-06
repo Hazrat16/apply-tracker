@@ -1,0 +1,131 @@
+name: Deploy
+
+# Manual only. Actions → Deploy → Run workflow. Pushes to main do not deploy.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Where to deploy
+        type: choice
+        options:
+          - aws
+          - free-server
+          - both
+        default: aws
+        required: true
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  aws:
+    name: Deploy to AWS
+    if: (inputs.target == 'aws' || inputs.target == 'both') && vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_INSTANCE_ID: ${{ vars.AWS_INSTANCE_ID }}
+      IMAGE_REGISTRY: ${{ vars.AWS_ECR_REGISTRY }}
+      IMAGE_TAG: ${{ github.sha }}
+      ACME_EMAIL: ${{ vars.ACME_EMAIL }}
+      APP_URL: ${{ vars.APP_URL }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Build and push images
+        run: |
+          set -euo pipefail
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login --username AWS --password-stdin "$IMAGE_REGISTRY"
+          docker build -f apps/api/Dockerfile -t "$IMAGE_REGISTRY/apply-tracker-api:$IMAGE_TAG" .
+          docker build -f apps/web/Dockerfile -t "$IMAGE_REGISTRY/apply-tracker-web:$IMAGE_TAG" .
+          docker push "$IMAGE_REGISTRY/apply-tracker-api:$IMAGE_TAG"
+          docker push "$IMAGE_REGISTRY/apply-tracker-web:$IMAGE_TAG"
+
+      - name: Roll out on the instance
+        run: bash scripts/aws/rollout.sh
+
+      - name: Smoke test
+        run: bash scripts/deploy/smoke.sh "$APP_URL"
+
+  oracle:
+    name: Deploy to the free server
+    if: inputs.target == 'free-server' || inputs.target == 'both'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - id: gate
+        env:
+          HOST: ${{ secrets.ORACLE_HOST }}
+          KEY: ${{ secrets.ORACLE_SSH_KEY }}
+        run: |
+          if [ -n "$HOST" ] && [ -n "$KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Free-server deploy skipped. Set the ORACLE_HOST and ORACLE_SSH_KEY secrets to enable it."
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: docker/setup-qemu-action@v3
+        if: steps.gate.outputs.enabled == 'true'
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.gate.outputs.enabled == 'true'
+
+      - uses: docker/login-action@v3
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Arm images
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          owner="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          echo "IMAGE_REGISTRY=ghcr.io/${owner}" >> "$GITHUB_ENV"
+          docker buildx build --platform linux/arm64 --push \
+            -f apps/api/Dockerfile -t "ghcr.io/${owner}/apply-tracker-api:${IMAGE_TAG}" .
+          docker buildx build --platform linux/arm64 --push \
+            -f apps/web/Dockerfile -t "ghcr.io/${owner}/apply-tracker-web:${IMAGE_TAG}" .
+
+      - name: Roll out on the VM
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_SSH_KEY: ${{ secrets.ORACLE_SSH_KEY }}
+          ORACLE_USER: ${{ secrets.ORACLE_USER }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACME_EMAIL: ${{ vars.ACME_EMAIL }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/oracle/rollout.sh
+
+      - name: Smoke test
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+        run: bash scripts/deploy/smoke.sh "https://${ORACLE_HOST}.sslip.io"
