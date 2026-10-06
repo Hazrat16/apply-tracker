@@ -3,8 +3,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from 'next-themes';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { Toaster } from '@/components/ui/sonner';
+import { initMonitoring } from '@/lib/monitoring';
 
 let browserQueryClient: QueryClient | undefined;
 
@@ -22,6 +23,8 @@ function getQueryClient() {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
+  useEffect(initMonitoring, []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={getQueryClient()}>

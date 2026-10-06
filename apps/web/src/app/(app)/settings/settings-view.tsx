@@ -7,6 +7,7 @@ import { NotificationSettings } from '@/features/settings/notification-settings'
 import { PasswordForm } from '@/features/settings/password-form';
 import { ProfileForm } from '@/features/settings/profile-form';
 import { ResumesSettings } from '@/features/settings/resumes-settings';
+import { SessionsSettings } from '@/features/settings/sessions-settings';
 import { TagsSettings } from '@/features/settings/tags-settings';
 
 export function SettingsView() {
@@ -22,6 +23,7 @@ export function SettingsView() {
       <ResumesSettings />
       <NotificationSettings />
       <ConnectedAccounts user={user} />
+      <SessionsSettings />
       <TagsSettings />
       <DeleteAccount user={user} />
     </div>

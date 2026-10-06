@@ -1,14 +1,14 @@
+import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
-
-// Server-side address of the NestJS API. The browser never calls it directly:
-// `/api/*` is proxied, so auth cookies are first-party and no CORS is needed.
-const API_URL = process.env.API_URL ?? 'http://localhost:4000';
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  async rewrites() {
-    return [{ source: '/api/:path*', destination: `${API_URL}/api/:path*` }];
-  },
+  // Self-contained server bundle for the Docker image (apps/web/Dockerfile).
+  output: 'standalone',
+  // Monorepo: trace dependencies from the repository root (e.g. packages/shared).
+  outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
+  // `/api/*` is forwarded to the NestJS API by src/proxy.ts (at request time, so one build
+  // works with any API_URL — next.config rewrites are fixed when the app is built).
 };
 
 export default nextConfig;

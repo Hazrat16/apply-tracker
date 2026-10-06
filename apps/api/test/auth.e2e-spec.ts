@@ -269,7 +269,7 @@ describe('Auth (e2e)', () => {
   describe('Google sign-in', () => {
     it('reports Google as unavailable when not configured', async () => {
       const res = await ctx.agent().get('/api/v1/auth/providers').expect(200);
-      expect(res.body).toEqual({ google: false });
+      expect(res.body).toEqual({ google: false, demo: true });
       await ctx.agent().get('/api/v1/auth/google').expect(404);
     });
 

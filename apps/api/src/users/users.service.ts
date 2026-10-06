@@ -63,6 +63,8 @@ export class UsersService {
       emailVerified: user.emailVerifiedAt !== null,
       hasPassword: user.passwordHash !== null,
       providers: user.accounts.map((account) => account.provider),
+      isDemo: user.demoExpiresAt !== null,
+      demoExpiresAt: user.demoExpiresAt?.toISOString() ?? null,
       createdAt: user.createdAt.toISOString(),
     };
   }

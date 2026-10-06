@@ -75,6 +75,7 @@ export function WeeklyChart({ data }: { data: Analytics }) {
                   <div
                     key={week.weekStart}
                     tabIndex={0}
+                    role="img"
                     aria-label={`${label}: ${week.applied} application${week.applied === 1 ? '' : 's'}`}
                     className="group flex h-full flex-1 items-end justify-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     {...bind({

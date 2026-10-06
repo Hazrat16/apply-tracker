@@ -6,6 +6,7 @@ import {
   NOTIFICATIONS_QUEUE,
   type ReminderDueData,
 } from '../queue/queue.constants.js';
+import { DemoService } from '../demo/demo.service.js';
 import { AutomationService } from './automation.service.js';
 
 /** Consumes the notifications queue: due reminders and the scheduled scans. */
@@ -13,7 +14,10 @@ import { AutomationService } from './automation.service.js';
 export class NotificationsProcessor extends WorkerHost {
   private readonly logger = new Logger(NotificationsProcessor.name);
 
-  constructor(private readonly automation: AutomationService) {
+  constructor(
+    private readonly automation: AutomationService,
+    private readonly demo: DemoService,
+  ) {
     super();
   }
 
@@ -29,6 +33,8 @@ export class NotificationsProcessor extends WorkerHost {
         return this.report(job, await this.automation.notifyUpcomingInterviews());
       case NotificationJob.WeeklySummaries:
         return this.report(job, await this.automation.sendWeeklySummaries());
+      case NotificationJob.CleanupDemoAccounts:
+        return this.report(job, await this.demo.cleanupExpired());
       default:
         throw new Error(`Unknown job "${job.name}"`);
     }

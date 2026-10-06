@@ -17,7 +17,8 @@
     "format:check": "prettier --check .",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:browser": "pnpm --filter @apply-tracker/e2e test:browser"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

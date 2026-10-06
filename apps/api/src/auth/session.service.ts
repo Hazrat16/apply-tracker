@@ -2,6 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { Env } from '../config/env.js';
+import type { SessionInfo } from '@apply-tracker/shared';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { AccessTokenPayload, ClientInfo, IssuedTokens } from './auth.types.js';
 import { generateToken, hashToken } from './crypto.util.js';
@@ -102,6 +103,40 @@ export class SessionService {
       where: { id: sessionId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+  }
+
+  /** Active sessions of a user, most recently used first. */
+  async listActive(userId: string, currentSessionId: string): Promise<SessionInfo[]> {
+    const sessions = await this.prisma.session.findMany({
+      where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { lastUsedAt: 'desc' },
+    });
+    return sessions.map((session) => ({
+      id: session.id,
+      userAgent: session.userAgent,
+      ipAddress: session.ipAddress,
+      createdAt: session.createdAt.toISOString(),
+      lastUsedAt: session.lastUsedAt.toISOString(),
+      current: session.id === currentSessionId,
+    }));
+  }
+
+  /** Signs out one of the user's sessions. Returns false if it isn't theirs or already ended. */
+  async revokeForUser(userId: string, sessionId: string): Promise<boolean> {
+    const { count } = await this.prisma.session.updateMany({
+      where: { id: sessionId, userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    return count > 0;
+  }
+
+  /** Whether an access token's session is still valid (not signed out or expired). */
+  async isActive(sessionId: string): Promise<boolean> {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { revokedAt: true, expiresAt: true },
+    });
+    return !!session && !session.revokedAt && session.expiresAt > new Date();
   }
 
   /** Signs the user out everywhere, optionally keeping the current session. */

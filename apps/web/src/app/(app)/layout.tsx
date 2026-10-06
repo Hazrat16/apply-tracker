@@ -2,6 +2,7 @@ import { AppNav } from '@/components/app-nav';
 import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { AuthGate } from '@/features/auth/components/auth-gate';
+import { DemoBanner } from '@/features/auth/components/demo-banner';
 import { UserMenu } from '@/features/auth/components/user-menu';
 import { VerifyEmailBanner } from '@/features/auth/components/verify-email-banner';
 import { NotificationBell } from '@/features/notifications/notification-bell';
@@ -22,6 +23,7 @@ export default function AppLayout({ children }: LayoutProps<'/'>) {
           </div>
         </div>
       </header>
+      <DemoBanner />
       <VerifyEmailBanner />
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-4 py-8">
         <AuthGate>{children}</AuthGate>

@@ -14,7 +14,10 @@ import { WorkersModule } from './automation/workers.module.js';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { OriginGuard } from './common/guards/origin.guard.js';
+import { RateLimitModule } from './common/throttler/rate-limit.module.js';
+import { RedisThrottlerStorage } from './common/throttler/redis-throttler.storage.js';
 import { type Env, validateEnv } from './config/env.js';
+import { DemoModule } from './demo/demo.module.js';
 import { HealthModule } from './health/health.module.js';
 import { JobImportModule } from './job-import/job-import.module.js';
 import { MailModule } from './mail/mail.module.js';
@@ -50,10 +53,13 @@ import { UsersModule } from './users/users.module.js';
       }),
     }),
     ThrottlerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<Env, true>) => ({
+      imports: [RateLimitModule],
+      inject: [ConfigService, RedisThrottlerStorage],
+      useFactory: (config: ConfigService<Env, true>, storage: RedisThrottlerStorage) => ({
         throttlers: [{ name: 'default', ttl: 60_000, limit: 100 }],
         skipIf: () => !config.get('RATE_LIMIT_ENABLED', { infer: true }),
+        // Shared across API instances (the default in-memory store counts per process).
+        storage,
       }),
     }),
     PrismaModule,
@@ -73,6 +79,7 @@ import { UsersModule } from './users/users.module.js';
     AnalyticsModule,
     ResumesModule,
     AiModule,
+    DemoModule,
     // Queue consumers run in the API process unless RUN_WORKERS=false (then `node dist/worker.js`).
     ConditionalModule.registerWhen(WorkersModule, (env) => env.RUN_WORKERS !== 'false'),
   ],

@@ -14,6 +14,9 @@ export const userSchema = z.object({
   emailVerified: z.boolean(),
   hasPassword: z.boolean(),
   providers: z.array(oauthProviderSchema),
+  /** A throwaway "Try the demo" account; deleted at `demoExpiresAt`. */
+  isDemo: z.boolean(),
+  demoExpiresAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
 });
 export type User = z.infer<typeof userSchema>;
@@ -32,3 +35,15 @@ export const deleteAccountSchema = z.object({
   password: z.string().max(PASSWORD_MAX_LENGTH).optional(),
 });
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
+
+/** A signed-in device/browser, for "sign out other devices". */
+export const sessionInfoSchema = z.object({
+  id: z.string(),
+  userAgent: z.string().nullable(),
+  ipAddress: z.string().nullable(),
+  createdAt: z.iso.datetime(),
+  lastUsedAt: z.iso.datetime(),
+  /** The session making this request. */
+  current: z.boolean(),
+});
+export type SessionInfo = z.infer<typeof sessionInfoSchema>;

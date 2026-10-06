@@ -53,6 +53,7 @@ export function clientInfo(req: Request): ClientInfo {
 export class AuthController {
   private readonly cookies: CookieSettings;
   private readonly webUrl: string;
+  private readonly demoEnabled: boolean;
 
   constructor(
     private readonly auth: AuthService,
@@ -64,13 +65,14 @@ export class AuthController {
       accessTtlSeconds: config.get('ACCESS_TOKEN_TTL_SECONDS', { infer: true }),
     };
     this.webUrl = config.get('WEB_URL', { infer: true });
+    this.demoEnabled = config.get('DEMO_ENABLED', { infer: true });
   }
 
   @Public()
   @Get('providers')
   @ApiOperation({ summary: 'Sign-in methods available on this server' })
   providers(): AuthProviders {
-    return { google: this.google.enabled };
+    return { google: this.google.enabled, demo: this.demoEnabled };
   }
 
   @Public()

@@ -17,7 +17,8 @@ function RateMeter({ value, label }: { value: number | null; label: string }) {
           style={{ width: `${(value ?? 0) * 100}%` }}
         />
       </div>
-      <span className="w-10 text-right tabular-nums" aria-label={`${label} ${percent(value)}`}>
+      <span className="w-10 text-right tabular-nums">
+        <span className="sr-only">{label} </span>
         {percent(value)}
       </span>
     </div>

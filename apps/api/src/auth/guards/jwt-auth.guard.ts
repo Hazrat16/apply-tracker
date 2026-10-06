@@ -5,13 +5,18 @@ import type { Request } from 'express';
 import { ACCESS_COOKIE, readCookie } from '../auth-cookies.js';
 import type { AccessTokenPayload, AuthenticatedRequest } from '../auth.types.js';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
+import { SessionService } from '../session.service.js';
 
-/** Global guard: every route requires a valid access token unless marked `@Public()`. */
+/**
+ * Global guard: every route requires a valid access token for a session that is still active,
+ * unless marked `@Public()`.
+ */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwt: JwtService,
     private readonly reflector: Reflector,
+    private readonly sessions: SessionService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -25,13 +30,16 @@ export class JwtAuthGuard implements CanActivate {
     const token = readCookie(req, ACCESS_COOKIE) ?? this.bearerToken(req);
     if (!token) throw new UnauthorizedException();
 
+    let payload: AccessTokenPayload;
     try {
-      const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token);
-      (req as AuthenticatedRequest).user = { userId: payload.sub, sessionId: payload.sid };
-      return true;
+      payload = await this.jwt.verifyAsync<AccessTokenPayload>(token);
     } catch {
       throw new UnauthorizedException();
     }
+    // A signed-out session ends at once, not when its short-lived access token expires.
+    if (!(await this.sessions.isActive(payload.sid))) throw new UnauthorizedException();
+    (req as AuthenticatedRequest).user = { userId: payload.sub, sessionId: payload.sid };
+    return true;
   }
 
   private bearerToken(req: Request): string | undefined {

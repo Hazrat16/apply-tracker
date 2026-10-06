@@ -35,6 +35,6 @@ import { VerificationTokenService } from './verification-token.service.js';
     UsersService,
     VerificationTokenService,
   ],
-  exports: [AuthService, UsersService],
+  exports: [AuthService, SessionService, UsersService],
 })
 export class AuthModule {}

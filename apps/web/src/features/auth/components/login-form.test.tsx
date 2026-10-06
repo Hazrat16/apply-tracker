@@ -19,6 +19,8 @@ const user = {
   emailVerified: true,
   hasPassword: true,
   providers: [],
+  isDemo: false,
+  demoExpiresAt: null,
   createdAt: new Date().toISOString(),
 };
 
@@ -26,7 +28,9 @@ function mockApi(login: Response) {
   vi.stubGlobal(
     'fetch',
     vi.fn((url: string) =>
-      Promise.resolve(url.endsWith('/auth/providers') ? jsonResponse({ google: false }) : login),
+      Promise.resolve(
+        url.endsWith('/auth/providers') ? jsonResponse({ google: false, demo: false }) : login,
+      ),
     ),
   );
 }

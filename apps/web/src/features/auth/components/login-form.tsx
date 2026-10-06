@@ -13,6 +13,7 @@ import { applyApiError } from '@/lib/form-errors';
 import { safeRedirectPath } from '@/lib/safe-redirect';
 import { authApi } from '../api';
 import { useSetMe } from '../hooks';
+import { DemoButton } from './demo-button';
 import { GoogleButton } from './google-button';
 
 const OAUTH_ERRORS: Record<string, string> = {
@@ -45,6 +46,7 @@ export function LoginForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <FieldGroup>
         <GoogleButton />
+        <DemoButton className="w-full" />
         <FormError message={errors.root?.message ?? oauthError} />
         <TextField
           label="Email"

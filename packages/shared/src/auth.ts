@@ -62,5 +62,9 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export const verifyEmailSchema = z.object({ token: tokenSchema });
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 
-export const authProvidersSchema = z.object({ google: z.boolean() });
+export const authProvidersSchema = z.object({
+  google: z.boolean(),
+  /** Whether "Try the demo" is available. */
+  demo: z.boolean(),
+});
 export type AuthProviders = z.infer<typeof authProvidersSchema>;

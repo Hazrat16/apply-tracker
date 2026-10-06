@@ -40,6 +40,7 @@ export function PipelineBars({ data }: { data: Analytics }) {
               {row.count > 0 && (
                 <div
                   tabIndex={0}
+                  role="img"
                   aria-label={`${STATUS_LABELS[row.status]}: ${row.count}`}
                   className="h-full rounded-r-[4px] bg-viz-series outline-none hover:opacity-85 focus-visible:ring-2 focus-visible:ring-ring"
                   style={{ width: `${(row.count / max) * 100}%` }}

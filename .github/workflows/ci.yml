@@ -13,7 +13,7 @@ jobs:
   check:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     services:
       postgres:
@@ -43,6 +43,7 @@ jobs:
       DATABASE_URL: postgresql://apply:apply@localhost:5432/apply_tracker_test?schema=public
       TEST_DATABASE_URL: postgresql://apply:apply@localhost:5432/apply_tracker_test?schema=public
       TEST_REDIS_URL: redis://localhost:6379/1
+      E2E_REDIS_URL: redis://localhost:6379/2
       TURBO_TELEMETRY_DISABLED: 1
 
     steps:
@@ -65,3 +66,15 @@ jobs:
       - run: pnpm test
       - run: pnpm test:e2e
       - run: pnpm build
+
+      # Browser tests (Playwright) against the production builds.
+      - name: Install Playwright browser
+        run: pnpm --filter @apply-tracker/e2e exec playwright install --with-deps chromium
+      - run: pnpm test:browser
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report
+          retention-days: 7

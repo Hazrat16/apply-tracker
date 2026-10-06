@@ -1,6 +1,7 @@
 import type { ApplicationSummary } from '@apply-tracker/shared';
 import { CalendarClock, Flag, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import type { Ref } from 'react';
 import { cn } from '@/lib/utils';
 import { formatPlace, formatSalary, formatUpcoming, timeAgo } from '../../format';
 import { TagBadge } from '../tag-badge';
@@ -9,9 +10,11 @@ interface ApplicationCardProps {
   application: ApplicationSummary;
   /** Rendered in the drag overlay: no link, lifted look. */
   overlay?: boolean;
+  /** Lets the board make the link the keyboard handle for moving the card. */
+  linkProps?: { ref?: Ref<HTMLAnchorElement>; 'aria-describedby'?: string };
 }
 
-export function ApplicationCard({ application: app, overlay }: ApplicationCardProps) {
+export function ApplicationCard({ application: app, overlay, linkProps }: ApplicationCardProps) {
   const salary = formatSalary(app.salaryMin, app.salaryMax, app.currency);
   const place = formatPlace(app.location, app.workMode);
 
@@ -36,9 +39,11 @@ export function ApplicationCard({ application: app, overlay }: ApplicationCardPr
         <p className="mt-0.5 font-medium leading-snug">{app.roleTitle}</p>
       ) : (
         <Link
+          {...linkProps}
           href={`/applications/${app.id}`}
+          aria-label={`${app.roleTitle} at ${app.company.name}`}
           // Stretched link: the whole card is clickable, while drag listeners stay on the card.
-          className="mt-0.5 block font-medium leading-snug outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring"
+          className="mt-0.5 block min-h-6 font-medium leading-snug outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring"
         >
           {app.roleTitle}
         </Link>

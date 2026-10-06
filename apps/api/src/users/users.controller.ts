@@ -1,4 +1,15 @@
-import { Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Res } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Patch,
+  Post,
+  Res,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
@@ -7,6 +18,7 @@ import {
   type DeleteAccountInput,
   deleteAccountSchema,
   type NotificationPreferences,
+  type SessionInfo,
   type UpdateNotificationPreferencesInput,
   updateNotificationPreferencesSchema,
   type UpdateProfileInput,
@@ -16,8 +28,10 @@ import {
 import type { Response } from 'express';
 import { clearAuthCookies } from '../auth/auth-cookies.js';
 import { AuthService } from '../auth/auth.service.js';
+import { SessionService } from '../auth/session.service.js';
 import type { AuthUser } from '../auth/auth.types.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { UuidParam } from '../common/params/uuid-param.decorator.js';
 import { ApiZodBody, ZodBody } from '../common/zod/zod-body.decorator.js';
 import type { Env } from '../config/env.js';
 import { UsersService } from './users.service.js';
@@ -32,6 +46,7 @@ export class UsersController {
   constructor(
     private readonly users: UsersService,
     private readonly auth: AuthService,
+    private readonly sessions: SessionService,
     config: ConfigService<Env, true>,
   ) {
     this.secureCookies = config.get('NODE_ENV', { infer: true }) === 'production';
@@ -80,6 +95,33 @@ export class UsersController {
     @ZodBody(changePasswordSchema) body: ChangePasswordInput,
   ): Promise<void> {
     return this.auth.changePassword(user.userId, user.sessionId, body);
+  }
+
+  @Get('sessions')
+  @ApiOperation({ summary: 'Devices and browsers signed in to this account' })
+  listSessions(@CurrentUser() user: AuthUser): Promise<SessionInfo[]> {
+    return this.sessions.listActive(user.userId, user.sessionId);
+  }
+
+  @Delete('sessions')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Sign out every other device' })
+  @ApiNoContentResponse()
+  async revokeOtherSessions(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.sessions.revokeAllForUser(user.userId, user.sessionId);
+  }
+
+  @Delete('sessions/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Sign out one device (use logout for the current one)' })
+  @ApiNoContentResponse()
+  async revokeSession(@CurrentUser() user: AuthUser, @UuidParam() id: string): Promise<void> {
+    if (id === user.sessionId) {
+      throw new BadRequestException('Use “Sign out” to end the session you are using');
+    }
+    if (!(await this.sessions.revokeForUser(user.userId, id))) {
+      throw new NotFoundException('Session not found');
+    }
   }
 
   @Delete()

@@ -11,6 +11,8 @@ export const NotificationJob = {
   FollowUpSuggestions: 'follow-up-suggestions',
   UpcomingInterviews: 'upcoming-interviews',
   WeeklySummaries: 'weekly-summaries',
+  /** Deletes "Try the demo" accounts older than 24 hours. */
+  CleanupDemoAccounts: 'cleanup-demo-accounts',
 } as const;
 
 export const EmailJob = { Send: 'send' } as const;

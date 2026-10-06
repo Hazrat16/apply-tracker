@@ -83,9 +83,15 @@ export function ApplicationDetailView({ id }: { id: string }) {
                 <CardTitle>Job description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="max-h-96 overflow-y-auto text-sm whitespace-pre-wrap">
+                {/* Focusable so keyboard users can scroll a long description. */}
+                <div
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Job description text"
+                  className="max-h-96 overflow-y-auto rounded-md text-sm whitespace-pre-wrap outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
                   {app.jobDescription}
-                </p>
+                </div>
               </CardContent>
             </Card>
           )}

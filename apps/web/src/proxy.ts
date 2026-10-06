@@ -14,11 +14,21 @@ const PROTECTED_PREFIXES = [
 const GUEST_ONLY = ['/login', '/register'];
 
 /**
- * Optimistic redirects only — the API is the real authority. A stale hint cookie is
+ * The browser never calls the API directly: `/api/*` is forwarded to it, so auth cookies are
+ * first-party and no CORS is needed. Read per request, so a built image can point anywhere.
+ */
+const apiUrl = () => process.env.API_URL ?? 'http://localhost:4000';
+
+/**
+ * API forwarding, plus optimistic redirects — the API is the real authority. A stale hint cookie is
  * harmless: the API rejects the request, the client's refresh fails and clears it.
  */
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  if (pathname === '/api' || pathname.startsWith('/api/')) {
+    return NextResponse.rewrite(new URL(pathname + search, apiUrl()));
+  }
   const hasSession = request.cookies.has(SESSION_HINT_COOKIE);
 
   if (
@@ -39,6 +49,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/api/:path*',
     '/dashboard/:path*',
     '/board/:path*',
     '/applications/:path*',

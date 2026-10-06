@@ -49,6 +49,8 @@ const envSchema = z.object({
   MAIL_FROM: z.string().default('ApplyTracker <no-reply@applytracker.local>'),
 
   RATE_LIMIT_ENABLED: z.stringbool().default(true),
+  /** "Try the demo" button: throwaway accounts with sample data, deleted after 24 hours. */
+  DEMO_ENABLED: z.stringbool().default(true),
 
   // Optional: AI extraction for job imports (pasted text, pages without structured data).
   ANTHROPIC_API_KEY: z.string().optional(),
@@ -66,6 +68,11 @@ const envSchema = z.object({
   AI_API_KEY: z.string().optional(),
   /** Model name; required for `openai-compatible`, defaults to claude-opus-5-5 for `anthropic`. */
   AI_MODEL: z.string().optional(),
+
+  // Optional error reporting (Sentry free plan or self-hosted GlitchTip); read in monitoring/sentry.ts.
+  SENTRY_DSN: z.url().optional(),
+  SENTRY_ENVIRONMENT: z.string().optional(),
+  SENTRY_RELEASE: z.string().optional(),
 
   // Google sign-in is enabled only when both are set.
   GOOGLE_CLIENT_ID: z.string().optional(),

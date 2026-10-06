@@ -5,6 +5,9 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module.js';
 import { configureApp, setupSwagger } from './app.setup.js';
 import type { Env } from './config/env.js';
+import { initMonitoring } from './monitoring/sentry.js';
+
+initMonitoring('api');
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });

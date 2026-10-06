@@ -25,6 +25,11 @@ const SCHEDULES = [
     name: NotificationJob.FollowUpSuggestions,
     repeat: { pattern: '15 */6 * * *' },
   },
+  {
+    id: 'cleanup-demo-accounts',
+    name: NotificationJob.CleanupDemoAccounts,
+    repeat: { pattern: '30 * * * *' },
+  },
 ] as const;
 
 @Injectable()

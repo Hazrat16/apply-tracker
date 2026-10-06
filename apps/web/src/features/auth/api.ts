@@ -7,10 +7,13 @@ import {
   type LoginInput,
   type RegisterInput,
   type ResetPasswordInput,
+  type SessionInfo,
+  sessionInfoSchema,
   type UpdateProfileInput,
   type User,
   userSchema,
 } from '@apply-tracker/shared';
+import { z } from 'zod';
 import { apiFetch } from '@/lib/api-client';
 
 export const authApi = {
@@ -21,6 +24,7 @@ export const authApi = {
   register: (body: RegisterInput) =>
     apiFetch<User>('/v1/auth/register', { method: 'POST', body, schema: userSchema }),
   logout: () => apiFetch('/v1/auth/logout', { method: 'POST' }),
+  startDemo: () => apiFetch<User>('/v1/auth/demo', { method: 'POST', schema: userSchema }),
   verifyEmail: (token: string) =>
     apiFetch('/v1/auth/verify-email', { method: 'POST', body: { token } }),
   resendVerification: () => apiFetch('/v1/auth/resend-verification', { method: 'POST' }),
@@ -33,4 +37,11 @@ export const authApi = {
   changePassword: (body: ChangePasswordInput) =>
     apiFetch('/v1/users/me/password', { method: 'POST', body }),
   deleteAccount: (body: DeleteAccountInput) => apiFetch('/v1/users/me', { method: 'DELETE', body }),
+  sessions: (signal?: AbortSignal) =>
+    apiFetch<SessionInfo[]>('/v1/users/me/sessions', {
+      schema: z.array(sessionInfoSchema),
+      signal,
+    }),
+  revokeSession: (id: string) => apiFetch(`/v1/users/me/sessions/${id}`, { method: 'DELETE' }),
+  revokeOtherSessions: () => apiFetch('/v1/users/me/sessions', { method: 'DELETE' }),
 };

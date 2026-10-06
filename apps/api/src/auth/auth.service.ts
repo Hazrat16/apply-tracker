@@ -201,6 +201,10 @@ export class AuthService {
 
   async changePassword(userId: string, sessionId: string, input: ChangePasswordInput) {
     const user = await this.users.getById(userId);
+    if (user.demoExpiresAt) {
+      // Demo accounts are throwaway; a password would turn one into a permanent login.
+      throw new BadRequestException('Demo accounts can’t set a password — create your own account');
+    }
     if (user.passwordHash) {
       const valid =
         input.currentPassword !== undefined &&

@@ -52,6 +52,7 @@ export function FunnelChart({ data }: { data: Analytics }) {
               <div className="flex items-center gap-2">
                 <div
                   tabIndex={0}
+                  role="img"
                   aria-label={`${STAGE_LABELS[stage.stage]}: ${stage.count}`}
                   className="h-6 rounded-r-[4px] outline-none transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:ring-ring"
                   style={{

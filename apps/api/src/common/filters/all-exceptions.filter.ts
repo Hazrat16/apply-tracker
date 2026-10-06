@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import type { Request } from 'express';
+import { Sentry } from '../../monitoring/sentry.js';
 
 export interface ErrorResponse {
   statusCode: number;
@@ -47,7 +48,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         issues = body.issues;
       }
     } else {
+      // Unexpected errors only; HTTP errors (404, 400, …) are normal API behaviour.
       this.logger.error(exception);
+      Sentry.captureException(exception, {
+        tags: { requestId: request.id },
+        extra: { method: request.method, path: request.path },
+      });
     }
 
     const body: ErrorResponse = {

@@ -2,6 +2,9 @@
 // jobs without an HTTP server, so it can be scaled separately from the API.
 process.env.RUN_WORKERS = 'true';
 
+const { initMonitoring } = await import('./monitoring/sentry.js');
+initMonitoring('worker');
+
 const { NestFactory } = await import('@nestjs/core');
 const { Logger } = await import('nestjs-pino');
 const { AppModule } = await import('./app.module.js');

@@ -1,6 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
+import { Sentry } from '../monitoring/sentry.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AI_QUEUE, AiJob, type AiJobData } from '../queue/queue.constants.js';
 import {
@@ -36,6 +37,7 @@ export class AiProcessor extends WorkerHost {
       if (!(error instanceof PermanentAiError) && !lastAttempt) throw error;
 
       this.logger.warn({ err: error as unknown }, `AI job ${job.name} ${job.data.id} failed`);
+      if (!(error instanceof PermanentAiError)) Sentry.captureException(error);
       const data = { status: 'FAILED', error: FAILED_MESSAGE } as const;
       if (job.name === AiJob.ResumeMatch) {
         await this.prisma.resumeMatch.updateMany({

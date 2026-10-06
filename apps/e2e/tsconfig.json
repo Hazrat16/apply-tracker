@@ -1,0 +1,12 @@
+{
+  "extends": "@apply-tracker/typescript-config/base.json",
+  "compilerOptions": {
+    // Playwright compiles the tests itself; page.evaluate callbacks run in the browser.
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM"],
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["*.ts", "tests/**/*.ts"]
+}

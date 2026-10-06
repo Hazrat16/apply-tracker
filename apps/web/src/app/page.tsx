@@ -10,6 +10,7 @@ import {
 import { Suspense } from 'react';
 import { ApiStatus } from '@/components/api-status';
 import { ButtonLink } from '@/components/button-link';
+import { DemoButton } from '@/features/auth/components/demo-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,11 +84,12 @@ export default function Home() {
             Stop losing track of where you applied. ApplyTracker organises your job search, reminds
             you to follow up, and shows you what is working.
           </p>
-          <div className="mt-8 flex justify-center gap-3">
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <ButtonLink href="/register" size="lg">
               Create a free account
             </ButtonLink>
-            <ButtonLink href="/login" size="lg" variant="outline">
+            <DemoButton size="lg" />
+            <ButtonLink href="/login" size="lg" variant="ghost">
               Sign in
             </ButtonLink>
           </div>
