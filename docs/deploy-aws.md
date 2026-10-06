@@ -93,6 +93,8 @@ gh workflow run Deploy --ref main -f target=aws
 
 Watch it under the repository’s Actions tab. When it is green, open the URL the script printed.
 
+Run that workflow from `main`. If it fails with `Not authorized to perform sts:AssumeRoleWithWebIdentity`, the role was created with the older GitHub identity string. Re-run `scripts/aws/bootstrap.sh`. That updates the role to accept both the old subject and the id-based subject GitHub uses for repositories created after 15 July 2026, and it does not replace the instance.
+
 ## What a deploy does
 
 1. You run the **Deploy** workflow and pick **aws** (or **both**).

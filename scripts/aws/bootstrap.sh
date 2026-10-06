@@ -17,7 +17,12 @@ export AWS_REGION="$REGION" AWS_DEFAULT_REGION="$REGION"
 
 ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
 REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
-echo "Account ${ACCOUNT}, region ${REGION}, repo ${REPO}"
+# Repositories created after 15 July 2026 put owner and repository ids in the OIDC subject.
+OWNER="${REPO%%/*}"
+NAME="${REPO#*/}"
+OWNER_ID="$(gh api "repos/${REPO}" --jq .owner.id)"
+REPO_ID="$(gh api "repos/${REPO}" --jq .id)"
+echo "Account ${ACCOUNT}, region ${REGION}, repo ${REPO} (${OWNER_ID}/${REPO_ID})"
 
 PREFIX="apply-tracker"
 GHA_ROLE="${PREFIX}-gha"
@@ -32,8 +37,11 @@ if ! aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[]
     --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1 >/dev/null
 fi
 
-TRUST=$(jq -n --arg arn "$OIDC_ARN" --arg sub "repo:${REPO}:ref:refs/heads/main" '
-{
+TRUST=$(jq -n \
+  --arg arn "$OIDC_ARN" \
+  --arg legacy "repo:${REPO}:ref:refs/heads/main" \
+  --arg immutable "repo:${OWNER}@${OWNER_ID}/${NAME}@${REPO_ID}:ref:refs/heads/main" \
+  '{
   Version: "2012-10-17",
   Statement: [{
     Effect: "Allow",
@@ -41,7 +49,7 @@ TRUST=$(jq -n --arg arn "$OIDC_ARN" --arg sub "repo:${REPO}:ref:refs/heads/main"
     Action: "sts:AssumeRoleWithWebIdentity",
     Condition: {
       StringEquals: {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
-      StringLike: {"token.actions.githubusercontent.com:sub": $sub}
+      StringLike: {"token.actions.githubusercontent.com:sub": [$legacy, $immutable]}
     }
   }]
 }')
