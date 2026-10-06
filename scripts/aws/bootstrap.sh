@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# One-time AWS setup. No Terraform. After this, pushing to main deploys.
+# One-time AWS setup. No Terraform. After this, run the Deploy workflow by hand.
 #   ACME_EMAIL=you@example.com bash scripts/aws/bootstrap.sh
 set -euo pipefail
 
-: "${ACME_EMAIL:?Set ACME_EMAIL to an inbox Let's Encrypt can mail}"
+: "${ACME_EMAIL:?Set ACME_EMAIL to the inbox for certificate expiry notices}"
 
 for cmd in aws gh jq; do
   command -v "$cmd" >/dev/null || { echo "Install $cmd first" >&2; exit 1; }
@@ -32,7 +32,8 @@ if ! aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[]
     --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1 >/dev/null
 fi
 
-TRUST="$(jq -n --arg arn "$OIDC_ARN" --arg repo "$REPO" '{
+TRUST=$(jq -n --arg arn "$OIDC_ARN" --arg sub "repo:${REPO}:ref:refs/heads/main" '
+{
   Version: "2012-10-17",
   Statement: [{
     Effect: "Allow",
@@ -40,10 +41,10 @@ TRUST="$(jq -n --arg arn "$OIDC_ARN" --arg repo "$REPO" '{
     Action: "sts:AssumeRoleWithWebIdentity",
     Condition: {
       StringEquals: {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
-      StringLike: {"token.actions.githubusercontent.com:sub": ("repo:" + $repo + ":ref:refs/heads/main")}
+      StringLike: {"token.actions.githubusercontent.com:sub": $sub}
     }
   }]
-}')"
+}')
 if aws iam get-role --role-name "$GHA_ROLE" >/dev/null 2>&1; then
   aws iam update-assume-role-policy --role-name "$GHA_ROLE" --policy-document "$TRUST"
 else
@@ -57,7 +58,8 @@ fi
 aws iam attach-role-policy --role-name "$EC2_ROLE" \
   --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
-EC2_POLICY="$(jq -n --arg region "$REGION" --arg account "$ACCOUNT" '{
+EC2_POLICY=$(jq -n --arg region "$REGION" --arg account "$ACCOUNT" '
+{
   Version: "2012-10-17",
   Statement: [
     {Effect: "Allow", Action: "ecr:GetAuthorizationToken", Resource: "*"},
@@ -81,7 +83,7 @@ EC2_POLICY="$(jq -n --arg region "$REGION" --arg account "$ACCOUNT" '{
       Condition: {"StringEquals": {"kms:ViaService": ("ssm." + $region + ".amazonaws.com")}}
     }
   ]
-}')"
+}')
 aws iam put-role-policy --role-name "$EC2_ROLE" --policy-name "${PREFIX}-instance" --policy-document "$EC2_POLICY"
 
 if ! aws iam get-instance-profile --instance-profile-name "$EC2_ROLE" >/dev/null 2>&1; then
@@ -194,7 +196,8 @@ if [ "$online" != "Online" ]; then
   exit 1
 fi
 
-GHA_POLICY="$(jq -n --arg region "$REGION" --arg account "$ACCOUNT" --arg instance "$INSTANCE" '{
+GHA_POLICY=$(jq -n --arg region "$REGION" --arg account "$ACCOUNT" --arg instance "$INSTANCE" '
+{
   Version: "2012-10-17",
   Statement: [
     {Effect: "Allow", Action: "ecr:GetAuthorizationToken", Resource: "*"},
@@ -219,7 +222,7 @@ GHA_POLICY="$(jq -n --arg region "$REGION" --arg account "$ACCOUNT" --arg instan
     },
     {Effect: "Allow", Action: ["ssm:GetCommandInvocation", "ssm:ListCommandInvocations"], Resource: "*"}
   ]
-}')"
+}')
 aws iam put-role-policy --role-name "$GHA_ROLE" --policy-name "${PREFIX}-deploy" --policy-document "$GHA_POLICY"
 
 ROLE_ARN="arn:aws:iam::${ACCOUNT}:role/${GHA_ROLE}"
